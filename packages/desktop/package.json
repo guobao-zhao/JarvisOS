@@ -4,10 +4,10 @@
   "version": "1.17.13",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://opencode.ai",
+  "homepage": "https://github.com/guobao-zhao/JarvisOS",
   "author": {
-    "name": "OpenCode",
-    "email": "hello@opencode.ai"
+    "name": "JarvisOS",
+    "email": "jarvis@example.com"
   },
   "scripts": {
     "typecheck": "tsgo -b",
