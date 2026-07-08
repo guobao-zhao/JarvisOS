@@ -1,0 +1,108 @@
+:root {
+  --background-base: #0a0a0b;
+  --surface-elevated: #18181b;
+  --surface-hover: #27272a;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+
+  --accent-primary: #3b82f6;
+  --accent-primary-hover: #2563eb;
+
+  --status-idle: #22c55e;
+  --status-listening: #f59e0b;
+  --status-thinking: #8b5cf6;
+  --status-speaking: #06b6d4;
+}
+
+.jarvis-hud {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--background-base) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Utility classes that override Tailwind with our CSS variables */
+.jarvis-hud .bg-background-base {
+  background-color: var(--background-base) !important;
+}
+
+.jarvis-hud .bg-surface-elevated {
+  background-color: var(--surface-elevated) !important;
+}
+
+.jarvis-hud .hover\:bg-surface-hover:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+.jarvis-hud .bg-accent-primary {
+  background-color: var(--accent-primary) !important;
+}
+
+.jarvis-hud .hover\:bg-accent-primary\/90:hover {
+  background-color: var(--accent-primary-hover) !important;
+}
+
+.jarvis-hud .text-text-primary {
+  color: var(--text-primary) !important;
+}
+
+.jarvis-hud .text-text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.jarvis-hud .text-text-tertiary {
+  color: var(--text-tertiary) !important;
+}
+
+.jarvis-hud .placeholder\:text-text-tertiary::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+.jarvis-hud .border-border-subtle {
+  border-color: var(--border-subtle) !important;
+}
+
+.jarvis-hud .ring-accent-primary\/50:focus {
+  --tw-ring-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important;
+}
+
+/* Status colors */
+.text-status-idle {
+  color: var(--status-idle);
+}
+
+.text-status-listening {
+  color: var(--status-listening);
+}
+
+.text-status-thinking {
+  color: var(--status-thinking);
+}
+
+.text-status-speaking {
+  color: var(--status-speaking);
+}
+
+.bg-status-listening {
+  background-color: var(--status-listening);
+}
+
+/* Scrollbar styling for chat feed */
+.jarvis-hud ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.jarvis-hud ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jarvis-hud ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.jarvis-hud ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

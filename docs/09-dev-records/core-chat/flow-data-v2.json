@@ -1,0 +1,51 @@
+{
+  "project": "JarvisOS",
+  "change_name": "core-chat",
+  "flow_type": "standard",
+  "flow_start_time": "2026-07-07T11:37:28Z",
+  "changed_files": [
+    "bun.lock",
+    "docs/09-dev-records/core-chat/design.md",
+    "docs/09-dev-records/core-chat/tasks.md",
+    "docs/09-dev-records/core-chat/flow-data-v1.json",
+    "packages/desktop/package.json",
+    "packages/desktop/src/renderer/index.tsx",
+    "packages/desktop/src/renderer/jarvis/Store.ts",
+    "packages/desktop/src/renderer/jarvis/LLM.ts",
+    "packages/desktop/src/renderer/jarvis/Voice.ts",
+    "packages/desktop/src/renderer/jarvis/HUD.tsx",
+    "packages/desktop/src/renderer/jarvis/ChatFeed.tsx",
+    "packages/desktop/src/renderer/jarvis/InputBar.tsx",
+    "packages/desktop/src/renderer/jarvis/StatusBar.tsx",
+    "packages/desktop/src/renderer/jarvis/SidePanel.tsx",
+    "packages/desktop/src/renderer/jarvis/index.css",
+    "docs/projects/JarvisOS/route/PROJECT_ROUTE.md"
+  ],
+  "archive_path": "docs/09-dev-records/core-chat/",
+  "tasks_md_path": "docs/09-dev-records/core-chat/tasks.md",
+  "design_md_path": "docs/09-dev-records/core-chat/design.md",
+  "main_session": {
+    "kb_loaded": 0,
+    "kb_used": 0,
+    "kb_domain": "",
+    "kb_module": "",
+    "kb_path": "",
+    "scan_route_added_count": 9,
+    "route_miss_count": 1,
+    "route_added_count": 9,
+    "token_input": 370266,
+    "token_output": 41422,
+    "token_cache": 11793664
+  },
+  "reviewer": {
+    "total_rounds": 3,
+    "first_pass": 0,
+    "route_hit_count": 10,
+    "route_miss_count": 1,
+    "standards_violations_total": 0,
+    "business_issues_total": 0,
+    "token_input": 451024,
+    "token_output": 60184,
+    "token_cache": 0
+  }
+}

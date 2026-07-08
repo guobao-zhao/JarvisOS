@@ -40,6 +40,11 @@ export type FatalRendererError = {
   os?: string
 }
 
+export type JarvisStreamChatMessage = {
+  role: "user" | "assistant"
+  content: string
+}
+
 export type ElectronAPI = {
   killSidecar: () => Promise<void>
   installCli: () => Promise<string>
@@ -65,6 +70,15 @@ export type ElectronAPI = {
   getWindowID: () => Promise<string>
   onMenuCommand: (cb: (id: string) => void) => () => void
   onDeepLink: (cb: (urls: string[]) => void) => () => void
+
+  jarvisStreamChat: (
+    messages: JarvisStreamChatMessage[],
+    callbacks: {
+      onDelta: (delta: string) => void
+      onError: (error: string) => void
+      onDone: () => void
+    },
+  ) => () => void
 
   openDirectoryPicker: (opts?: {
     multiple?: boolean

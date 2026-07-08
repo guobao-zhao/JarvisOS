@@ -11,6 +11,7 @@ import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attach
 import { getStore, removeStoreFileIfEmpty } from "./store"
 import { getPinchZoomEnabled, getWindowID, setPinchZoomEnabled, setTitlebar, updateTitlebar } from "./windows"
 import type { UpdaterController } from "./updater-controller"
+import { handleJarvisStreamChat, type StreamChatMessage } from "./jarvis-llm"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 
 const pickerFilters = (ext?: string[]) => {
@@ -240,6 +241,9 @@ export function registerIpcHandlers(deps: Deps) {
       checkForUpdates: () => void deps.showUpdater(),
       relaunch: deps.relaunch,
     })
+  })
+  ipcMain.on("jarvis:stream-chat", (event: IpcMainEvent, messages: StreamChatMessage[]) => {
+    void handleJarvisStreamChat(event, messages)
   })
 }
 

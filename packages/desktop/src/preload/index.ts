@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
-import type { ElectronAPI, WslServersEvent } from "./types"
+import type { ElectronAPI, JarvisStreamChatMessage, WslServersEvent } from "./types"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -82,6 +82,24 @@ const api: ElectronAPI = {
     const handler = (_: unknown, urls: string[]) => cb(urls)
     ipcRenderer.on("deep-link", handler)
     return () => ipcRenderer.removeListener("deep-link", handler)
+  },
+
+  jarvisStreamChat: (messages: JarvisStreamChatMessage[], callbacks) => {
+    const deltaHandler = (_: unknown, delta: string) => callbacks.onDelta(delta)
+    const errorHandler = (_: unknown, error: string) => callbacks.onError(error)
+    const doneHandler = () => callbacks.onDone()
+
+    ipcRenderer.on("jarvis:stream-chat:delta", deltaHandler)
+    ipcRenderer.on("jarvis:stream-chat:error", errorHandler)
+    ipcRenderer.on("jarvis:stream-chat:done", doneHandler)
+
+    ipcRenderer.send("jarvis:stream-chat", messages)
+
+    return () => {
+      ipcRenderer.removeListener("jarvis:stream-chat:delta", deltaHandler)
+      ipcRenderer.removeListener("jarvis:stream-chat:error", errorHandler)
+      ipcRenderer.removeListener("jarvis:stream-chat:done", doneHandler)
+    }
   },
 
   openDirectoryPicker: (opts) => ipcRenderer.invoke("open-directory-picker", opts),

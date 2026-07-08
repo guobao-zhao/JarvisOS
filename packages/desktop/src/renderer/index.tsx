@@ -3,7 +3,6 @@
 import {
   ACCEPTED_FILE_EXTENSIONS,
   AppBaseProviders,
-  AppInterface,
   handleNotificationClick,
   loadLocaleDict,
   normalizeLocale,
@@ -11,20 +10,16 @@ import {
   type Platform,
   PlatformProvider,
   ServerConnection,
-  useCommand,
-  useWslServers,
 } from "@opencode-ai/app"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 import * as Sentry from "@sentry/solid"
 import type { AsyncStorage } from "@solid-primitives/storage"
-import { createMemoryHistory, MemoryRouter, type BaseRouterProps } from "@solidjs/router"
 import { createEffect, createMemo, createResource, createSignal, onCleanup, onMount, Show } from "solid-js"
 import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { initI18n, t } from "./i18n"
-import { initializationData, initializationReady } from "./initialization"
+import { JarvisOSHUD } from "./jarvis/HUD"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
-import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
 import { Splash } from "@opencode-ai/ui/logo"
 import { useTheme } from "@opencode-ai/ui/theme/context"
@@ -79,34 +74,6 @@ const emitDeepLinks = (urls: string[]) => {
 const listenForDeepLinks = () => {
   void window.api.consumeInitialDeepLinks().then((urls) => emitDeepLinks(urls))
   return window.api.onDeepLink((urls) => emitDeepLinks(urls))
-}
-
-function windowLastActiveUrlKey(windowID: string) {
-  return `opencode.desktop.window.${windowID}.last-active-url`
-}
-
-function getLastActiveUrl(windowID: string) {
-  if (typeof localStorage !== "object") return "/"
-  try {
-    const value = localStorage.getItem(windowLastActiveUrlKey(windowID))
-    if (value?.startsWith("/") && !value.startsWith("//")) return value
-  } catch {}
-  return "/"
-}
-
-function setLastActiveUrl(windowID: string, value: string) {
-  if (typeof localStorage !== "object") return
-  try {
-    localStorage.setItem(windowLastActiveUrlKey(windowID), value)
-  } catch {}
-}
-
-function DesktopMemoryRouter(props: BaseRouterProps & { windowID: string }) {
-  const history = createMemoryHistory()
-  const initialUrl = getLastActiveUrl(props.windowID)
-  if (initialUrl !== "/") history.set({ value: initialUrl, replace: true, scroll: false })
-  onCleanup(history.listen((value) => setLastActiveUrl(props.windowID, value)))
-  return <MemoryRouter {...props} history={history} />
 }
 
 const createPlatform = (windowState: DesktopWindowState): Platform => {
@@ -309,10 +276,6 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
   }
 }
 
-let menuTrigger = null as null | ((id: string) => void)
-window.api.onMenuCommand((id) => {
-  menuTrigger?.(id)
-})
 listenForDeepLinks()
 
 function LoadingSplash() {
@@ -344,9 +307,6 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
 
   const [defaultServer] = createResource(() => platform.getDefaultServer?.())
   const [locale] = createResource(loadLocale)
-  const router = (props: BaseRouterProps) => (
-    <DesktopMemoryRouter {...props} windowID={platform.windowID ?? "browser"} />
-  )
 
   function handleClick(e: MouseEvent) {
     const link = (e.target as HTMLElement).closest("a.external-link") as HTMLAnchorElement | null
@@ -356,10 +316,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
     }
   }
 
-  function Inner() {
-    const cmd = useCommand()
-    menuTrigger = (id) => cmd.trigger(id)
-
+  function App() {
     const theme = useTheme()
 
     createEffect(() => {
@@ -371,45 +328,13 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
       }
     })
 
-    return null
-  }
-
-  function App() {
-    const wslServers = useWslServers()
     const ready = createMemo(
       () => !defaultServer.loading && !sidecar.loading && !windowCount.loading && !locale.loading,
-    )
-    const servers = createMemo(() => {
-      const data = initializationData(sidecar)
-      const list: ServerConnection.Any[] = []
-      if (data) {
-        list.push({
-          displayName: "Local Server",
-          type: "sidecar",
-          variant: "base",
-          http: {
-            url: data.url,
-            username: data.username ?? undefined,
-            password: data.password ?? undefined,
-          },
-        })
-      }
-      list.push(...readyWslConnections(wslServers.data))
-      return list
-    })
-    const effectiveDefaultServer = createMemo(() =>
-      ServerConnection.Key.make(availableStartupServer(defaultServer.latest, wslServers.data)),
     )
 
     return (
       <Show when={ready()} fallback={<LoadingSplash />}>
-        <Show when={effectiveDefaultServer()} keyed>
-          {(key) => (
-            <AppInterface defaultServer={key} servers={servers()} router={router}>
-              <Inner />
-            </AppInterface>
-          )}
-        </Show>
+        <JarvisOSHUD />
       </Show>
     )
   }

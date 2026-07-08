@@ -20,7 +20,11 @@
 
 | 文件 | 改动 |
 |------|------|
-| `packages/desktop/package.json` | 新增 `ai`、`@ai-sdk/anthropic` 依赖 |
+| `packages/desktop/package.json` | 无需新增 LLM 依赖 |
+| `packages/desktop/src/main/jarvis-credential.ts` | 启动时从凭据金库读取 Kimi Code API key / baseURL |
+| `packages/desktop/src/main/jarvis-llm.ts` | Electron 主进程代理调用 Kimi Code API，通过 SSE 推送增量 |
+| `packages/desktop/src/main/ipc.ts` | 注册 `jarvis:stream-chat` IPC 通道 |
+| `packages/desktop/src/preload/index.ts` | 向渲染进程暴露 `jarvisStreamChat` |
 | `packages/desktop/src/renderer/index.tsx` | 用 `JarvisOSHUD` 替换原有的 `AppInterface` 渲染 |
 | `docs/projects/JarvisOS/route/PROJECT_ROUTE.md` | 追加本次新增文件职责索引 |
 
@@ -88,12 +92,12 @@ export interface VoiceAPI {
 
 ## 关键约束
 
-1. **API Key 安全**：Kimi API key 从环境变量 `KIMI_API_KEY` 读取，不硬编码、不入 git。
-2. **语音降级**：Web Speech API 在某些浏览器/环境下不可用，需优雅降级：语音识别不可用时隐藏麦克风按钮；语音合成不可用时只显示文字。
-3. **流式 UI**： assistant 回复逐字显示，避免等待完整响应。
-4. **状态可视化**：顶部状态条根据 `JarvisStatus` 改变颜色和文字。
+1. **API Key 安全**：Kimi API key 由 Electron 主进程在启动时从凭据金库读取，不进入渲染进程 bundle、不入 git。
+2. **CORS 处理**：LLM 请求由 Electron 主进程代理，渲染进程通过 IPC 获取增量文本，无需禁用 `webSecurity`。
+3. **语音降级**：Web Speech API 在某些浏览器/环境下不可用，需优雅降级：语音识别不可用时隐藏麦克风按钮；语音合成不可用时只显示文字。
+4. **流式 UI**： assistant 回复逐字显示，避免等待完整响应；只展示最终 `content`，不暴露 `reasoning_content`。
 5. **不依赖 OpenCode App**：Phase 2 用简化 HUD 替换 `AppInterface`，后续再逐步集成 core/session。
-6. **本地优先**：所有 LLM 调用在渲染进程直接发起，不经过远程服务器。
+6. **本地优先**：所有 LLM 调用由本地 Electron 主进程代理发起，不经过远程服务器。
 
 ## 设计自检
 
