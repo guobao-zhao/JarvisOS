@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
-import type { ElectronAPI, JarvisStreamChatMessage, WslServersEvent } from "./types"
+import type { ElectronAPI, JarvisMemorySearchResponse, JarvisMemoryWriteResponse, JarvisMetricsSnapshot, JarvisStreamChatMessage, JarvisToolMetric, WslServersEvent } from "./types"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -101,6 +101,25 @@ const api: ElectronAPI = {
       ipcRenderer.removeListener("jarvis:stream-chat:done", doneHandler)
     }
   },
+
+  jarvisMemorySearch: (query, options) =>
+    ipcRenderer.invoke("jarvis:memory-search", query, options) as Promise<JarvisMemorySearchResponse>,
+
+  jarvisMemoryWrite: (doc) =>
+    ipcRenderer.invoke("jarvis:memory-write", doc) as Promise<JarvisMemoryWriteResponse>,
+
+  jarvisMetricsSnapshot: () =>
+    ipcRenderer.invoke("jarvis:metrics-snapshot") as Promise<JarvisMetricsSnapshot>,
+
+  jarvisMetricsSubscribe: (cb) => {
+    const handler = (_: unknown, snapshot: JarvisMetricsSnapshot) => cb(snapshot)
+    ipcRenderer.on("jarvis:metrics-update", handler)
+    return () => {
+      ipcRenderer.removeListener("jarvis:metrics-update", handler)
+    }
+  },
+
+  jarvisToolMetrics: () => ipcRenderer.invoke("jarvis:tool-metrics") as Promise<JarvisToolMetric[]>,
 
   openDirectoryPicker: (opts) => ipcRenderer.invoke("open-directory-picker", opts),
   openFilePicker: (opts) => ipcRenderer.invoke("open-file-picker", opts),

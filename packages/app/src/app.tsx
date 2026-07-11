@@ -56,6 +56,7 @@ import { legacySessionServer, requireServerKey, sessionHref } from "./utils/sess
 
 import { SessionPage, TargetSessionRouteContent } from "@/pages/session"
 import { NewHome, LegacyHome } from "@/pages/home"
+import { HudPage } from "@/pages/hud"
 
 const NewSession = lazy(() => import("@/pages/new-session"))
 
@@ -530,7 +531,8 @@ function Routes() {
         </Route>
       </Route>
       <Show when={settings.general.newLayoutDesigns()}>
-        <Route path="/" component={NewHome} />
+        <Route path="/" component={HudPage} />
+        <Route path="/home" component={NewHome} />
         <Route path="/:dir/session/:id" component={LegacyTargetSessionRoute} />
       </Show>
       <Route path="/new-session" component={DraftRoute} />

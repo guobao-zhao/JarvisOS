@@ -1,0 +1,5 @@
+{
+  "toolName": "memory_search",
+  "skillName": "memory",
+  "dimensions": ["hit", "miss", "error", "latencyMs"]
+}

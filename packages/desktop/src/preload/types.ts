@@ -41,8 +41,93 @@ export type FatalRendererError = {
 }
 
 export type JarvisStreamChatMessage = {
-  role: "user" | "assistant"
+  role: "user" | "assistant" | "system"
   content: string
+}
+
+export type MemorySource =
+  | "conversation"
+  | "intelligence"
+  | "user_manual"
+  | "task"
+  | "insight"
+
+export type MemoryDocument = {
+  id: string
+  source: MemorySource
+  title: string
+  content: string
+  tags: string[]
+  createdAt: number
+  updatedAt: number
+  relations?: string[]
+}
+
+export type MemoryHit = {
+  id: string
+  title: string
+  content: string
+  score: number
+  source: MemorySource
+  path?: string
+}
+
+export type JarvisMemorySearchResponse =
+  | { ok: true; hits: MemoryHit[] }
+  | { ok: false; error: string }
+
+export type JarvisMemoryWriteResponse =
+  | { ok: true }
+  | { ok: false; error: string }
+
+export type JarvisSystemMetricsSnapshot = {
+  timestamp: number
+  cpu: { percent: number; cores: number }
+  memory: { usedPercent: number; usedGB: number; totalGB: number }
+  loadAvg: number
+  history: { cpu: number[]; memory: number[] }
+}
+
+export type JarvisLLMMetricsSnapshot = {
+  currentModel: string | null
+  totalCalls: number
+  totalErrors: number
+  errorRate: number
+  avgLatencyMs: number
+  lastLatencyMs: number
+  avgInputChars: number
+  avgOutputChars: number
+  totalTokens: number
+  lastTotalTokens: number
+  avgInputTokens: number
+  avgOutputTokens: number
+  history: number[]
+}
+
+export type JarvisMemoryMetricsSnapshot = {
+  totalRecalls: number
+  avgLatencyMs: number
+  lastLatencyMs: number
+  totalHits: number
+  hitRate: number
+  history: number[]
+}
+
+export type JarvisMetricsSnapshot = {
+  system: JarvisSystemMetricsSnapshot | null
+  llm: JarvisLLMMetricsSnapshot | null
+  memory: JarvisMemoryMetricsSnapshot | null
+}
+
+export type JarvisToolMetric = {
+  toolName: string
+  skillName: string
+  callCount: number
+  hitCount: number
+  missCount: number
+  errorCount: number
+  avgLatencyMs: number
+  lastUsedAt: number
 }
 
 export type ElectronAPI = {
@@ -79,6 +164,17 @@ export type ElectronAPI = {
       onDone: () => void
     },
   ) => () => void
+
+  jarvisMemorySearch: (
+    query: string,
+    options?: { topK?: number; source?: MemorySource; includeContent?: boolean },
+  ) => Promise<JarvisMemorySearchResponse>
+  jarvisMemoryWrite: (doc: MemoryDocument) => Promise<JarvisMemoryWriteResponse>
+
+  jarvisMetricsSnapshot: () => Promise<JarvisMetricsSnapshot>
+  jarvisMetricsSubscribe: (cb: (snapshot: JarvisMetricsSnapshot) => void) => () => void
+
+  jarvisToolMetrics: () => Promise<JarvisToolMetric[]>
 
   openDirectoryPicker: (opts?: {
     multiple?: boolean

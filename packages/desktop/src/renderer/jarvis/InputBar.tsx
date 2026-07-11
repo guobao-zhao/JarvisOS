@@ -1,85 +1,13 @@
-import { createSignal, Show } from "solid-js"
 import { jarvisActions, jarvisStore } from "./Store"
-import { streamChat } from "./LLM"
-import { voiceAPI } from "./Voice"
+import { processUserInput } from "./consciousness"
 
 export function InputBar() {
-  const [isListening, setIsListening] = createSignal(false)
-
-  const canSend = () => jarvisStore.inputText.trim().length > 0 && jarvisStore.status !== "thinking"
   const isBusy = () => jarvisStore.status === "thinking"
 
   async function handleSend() {
-    if (isListening()) {
-      voiceAPI.stopRecognition()
-      setIsListening(false)
-      jarvisActions.setStatus("idle")
-    }
-
     const text = jarvisStore.inputText.trim()
     if (!text || isBusy()) return
-
-    jarvisActions.addMessage("user", text)
-    jarvisActions.resetInput()
-    await runAssistantTurn()
-  }
-
-  async function runAssistantTurn() {
-    const messages = jarvisStore.messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }))
-
-    jarvisActions.setStatus("thinking")
-
-    let fullResponse = ""
-    await streamChat(
-      messages,
-      (delta) => {
-        jarvisActions.appendAssistantContent(delta)
-      },
-      (error) => {
-        jarvisActions.appendAssistantContent(`\n\n[错误] ${error.message}`)
-      },
-    )
-
-    const lastMessage = jarvisStore.messages[jarvisStore.messages.length - 1]
-    fullResponse = lastMessage?.role === "assistant" ? lastMessage.content : ""
-
-    jarvisActions.setStatus("speaking")
-    voiceAPI.speak(fullResponse)
-
-    // Keep speaking status until synthesis finishes (best-effort)
-    const checkDone = () => {
-      if (!window.speechSynthesis.speaking) {
-        jarvisActions.setStatus("idle")
-      } else {
-        setTimeout(checkDone, 250)
-      }
-    }
-    setTimeout(checkDone, 250)
-  }
-
-  function toggleVoice() {
-    if (!voiceAPI.isRecognitionAvailable) return
-
-    if (isListening()) {
-      voiceAPI.stopRecognition()
-      setIsListening(false)
-      jarvisActions.setStatus("idle")
-      return
-    }
-
-    jarvisActions.setStatus("listening")
-    setIsListening(true)
-    voiceAPI.startRecognition((text, isFinal) => {
-      jarvisActions.setInputText(text)
-      if (isFinal) {
-        voiceAPI.stopRecognition()
-        setIsListening(false)
-        void handleSend()
-      }
-    })
+    await processUserInput(text)
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -89,42 +17,25 @@ export function InputBar() {
     }
   }
 
+  const placeholder = () => {
+    if (jarvisStore.isListening) return "聆听中..."
+    if (isBusy()) return "Jarvis 正在思考..."
+    return "等待输入指令..."
+  }
+
   return (
-    <div class="flex items-end gap-3 px-6 py-4 border-t border-border-subtle bg-background-base">
-      <Show when={voiceAPI.isRecognitionAvailable}>
-        <button
-          type="button"
-          onClick={toggleVoice}
+    <footer class="pointer-events-auto fixed bottom-6 left-1/2 z-40 w-full max-w-3xl -translate-x-1/2 px-6">
+      <div class="relative flex items-center rounded-xl border border-[#00f2ff]/25 bg-white/[0.03] h-10 px-4 transition-colors focus-within:border-[#00f2ff]/60 focus-within:bg-white/[0.05]">
+        <textarea
+          value={jarvisStore.inputText}
+          onInput={(e) => jarvisActions.setInputText(e.currentTarget.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder()}
           disabled={isBusy()}
-          class={`p-3 rounded-xl transition-colors ${
-            isListening()
-              ? "bg-status-listening text-white animate-pulse"
-              : "bg-surface-elevated text-text-secondary hover:bg-surface-hover"
-          } disabled:opacity-40 disabled:cursor-not-allowed`}
-          aria-label={isListening() ? "停止聆听" : "语音输入"}
-        >
-          {isListening() ? "🎙️" : "🎤"}
-        </button>
-      </Show>
-
-      <textarea
-        value={jarvisStore.inputText}
-        onInput={(e) => jarvisActions.setInputText(e.currentTarget.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={isBusy() ? "Jarvis 正在思考..." : "输入消息..."}
-        disabled={isBusy()}
-        rows={1}
-        class="flex-1 resize-none max-h-32 bg-surface-elevated text-text-primary placeholder:text-text-tertiary rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-accent-primary/50 disabled:opacity-60"
-      />
-
-      <button
-        type="button"
-        onClick={() => void handleSend()}
-        disabled={!canSend()}
-        class="px-5 py-3 rounded-xl bg-accent-primary text-white font-medium hover:bg-accent-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-      >
-        发送
-      </button>
-    </div>
+          rows={1}
+          class="h-full w-full resize-none bg-transparent py-2 text-sm text-[#00f2ff] placeholder:text-[#00f2ff]/30 outline-none disabled:opacity-60"
+        />
+      </div>
+    </footer>
   )
 }

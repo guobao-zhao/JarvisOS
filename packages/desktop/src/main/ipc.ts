@@ -11,7 +11,13 @@ import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attach
 import { getStore, removeStoreFileIfEmpty } from "./store"
 import { getPinchZoomEnabled, getWindowID, setPinchZoomEnabled, setTitlebar, updateTitlebar } from "./windows"
 import type { UpdaterController } from "./updater-controller"
-import { handleJarvisStreamChat, type StreamChatMessage } from "./jarvis-llm"
+import { getToolUsageMetrics, handleJarvisStreamChat, type StreamChatMessage } from "./jarvis-llm"
+import {
+  handleJarvisMemorySearch,
+  handleJarvisMemoryWrite,
+} from "./jarvis-memory"
+import { getMetricsSnapshot } from "./jarvis-metrics"
+import type { MemoryDocument, MemorySearchOptions } from "@jarvis-os/memory"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 
 const pickerFilters = (ext?: string[]) => {
@@ -244,6 +250,28 @@ export function registerIpcHandlers(deps: Deps) {
   })
   ipcMain.on("jarvis:stream-chat", (event: IpcMainEvent, messages: StreamChatMessage[]) => {
     void handleJarvisStreamChat(event, messages)
+  })
+
+  ipcMain.handle(
+    "jarvis:memory-search",
+    async (_event: IpcMainInvokeEvent, query: string, options?: MemorySearchOptions) => {
+      return handleJarvisMemorySearch(query, options)
+    },
+  )
+  ipcMain.handle("jarvis:memory-write", async (_event: IpcMainInvokeEvent, doc: MemoryDocument) => {
+    return handleJarvisMemoryWrite(doc)
+  })
+
+  ipcMain.handle("jarvis:metrics-snapshot", () => {
+    return getMetricsSnapshot()
+  })
+
+  ipcMain.handle("jarvis:tool-metrics", async () => {
+    try {
+      return await getToolUsageMetrics()
+    } catch {
+      return []
+    }
   })
 }
 

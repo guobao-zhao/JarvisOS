@@ -29,14 +29,13 @@ export function StatusBar() {
   }
 
   return (
-    <header class="flex items-center justify-between px-6 py-3 border-b border-border-subtle bg-background-base/80 backdrop-blur">
-      <div class="flex items-center gap-3">
+    <header class="flex items-center justify-between px-6 py-3 border-b border-border-subtle bg-background-base/80 backdrop-blur [-webkit-app-region:drag] [app-region:drag]">
+      <div class="flex items-center gap-3 [-webkit-app-region:no-drag] [app-region:no-drag]">
         <div class="w-2 h-2 rounded-full bg-accent-primary animate-pulse">
         </div>
-        <span class="font-semibold text-lg tracking-wide text-text-primary">JARVISOS</span>
       </div>
 
-      <div class="flex items-center gap-4 text-sm">
+      <div class="flex items-center gap-4 text-sm [-webkit-app-region:no-drag] [app-region:no-drag]">
         <span class={`font-medium ${statusColors[jarvisStore.status]}`}>
           {statusLabels[jarvisStore.status]}
         </span>

@@ -328,6 +328,13 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
       }
     })
 
+    // JarvisOS HUD is designed for dark mode; force it.
+    createEffect(() => {
+      if (theme.mode() !== "dark") {
+        theme.setColorScheme("dark")
+      }
+    })
+
     const ready = createMemo(
       () => !defaultServer.loading && !sidecar.loading && !windowCount.loading && !locale.loading,
     )

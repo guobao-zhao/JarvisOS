@@ -1,7 +1,10 @@
-import type { Message } from "./Store"
+export interface StreamMessage {
+  role: "user" | "assistant" | "system"
+  content: string
+}
 
 export async function streamChat(
-  messages: Pick<Message, "role" | "content">[],
+  messages: StreamMessage[],
   onText: (delta: string) => void,
   onError: (error: Error) => void,
 ): Promise<void> {

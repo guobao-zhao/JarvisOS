@@ -1,31 +1,10 @@
-import { createEffect, For, onMount } from "solid-js"
-import { jarvisStore, type Message } from "./Store"
-
-function formatTime(timestamp: number): string {
-  const d = new Date(timestamp)
-  return d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })
-}
-
-function MessageBubble(props: { message: Message }) {
-  const isUser = () => props.message.role === "user"
-
-  return (
-    <div class={`flex w-full ${isUser() ? "justify-end" : "justify-start"}`}>
-      <div
-        class={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-          isUser()
-            ? "bg-accent-primary text-white rounded-br-md"
-            : "bg-surface-elevated text-text-primary rounded-bl-md"
-        }`}
-      >
-        <div class="whitespace-pre-wrap">{props.message.content}</div>
-        <div class={`text-[10px] mt-1.5 ${isUser() ? "text-white/60" : "text-text-tertiary"}`}>
-          {formatTime(props.message.createdAt)}
-        </div>
-      </div>
-    </div>
-  )
-}
+import { createEffect, onMount } from "solid-js"
+import { JarvisCore } from "@/components/hud/core"
+import { jarvisStore } from "./Store"
+import { ConsciousnessPanel } from "./ConsciousnessPanel"
+import { MemoryOrb } from "./MemoryOrb"
+import { TaskField } from "./TaskField"
+import { VoiceOrb } from "./VoiceOrb"
 
 export function ChatFeed() {
   let scrollRef: HTMLDivElement | undefined
@@ -46,18 +25,28 @@ export function ChatFeed() {
   })
 
   return (
-    <div
-      ref={scrollRef}
-      class="flex-1 overflow-y-auto px-6 py-4 space-y-4 scroll-smooth"
-    >
-      <For each={jarvisStore.messages}>{(message) => <MessageBubble message={message} />}</For>
+    <div ref={scrollRef} class="relative flex-1 min-h-0 overflow-y-auto scroll-smooth">
+      {/* Jarvis consciousness whisper */}
+      <ConsciousnessPanel />
 
-      {jarvisStore.messages.length === 0 && (
-        <div class="h-full flex flex-col items-center justify-center text-text-tertiary">
-          <p class="text-lg font-medium">你好，宝哥</p>
-          <p class="text-sm mt-1">有什么可以帮你的？</p>
+      {/* Memory energy orb - above the core */}
+      <div class="pointer-events-none fixed left-1/2 top-20 -translate-x-1/2 z-20">
+        <MemoryOrb />
+      </div>
+
+      {/* Jarvis HUD core - central visual anchor */}
+      <div class="pointer-events-none fixed inset-0 top-14 flex items-center justify-center z-0 opacity-90">
+        <JarvisCore showControl={false} active={jarvisStore.status !== "idle"} />
+        <div class="pointer-events-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <VoiceOrb />
         </div>
-      )}
+      </div>
+
+      {/* Floating task capsules around the core */}
+      <TaskField />
+
+      {/* Messages are now contained in task capsules around the core */}
+      <div class="relative z-10 flex min-h-full flex-col px-6 py-4 pointer-events-none" />
     </div>
   )
 }

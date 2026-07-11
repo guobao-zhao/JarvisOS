@@ -17,54 +17,54 @@
   --status-speaking: #06b6d4;
 }
 
-.jarvis-hud {
+.jarvis-os-hud {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--background-base) !important;
   color: var(--text-primary) !important;
 }
 
 /* Utility classes that override Tailwind with our CSS variables */
-.jarvis-hud .bg-background-base {
+.jarvis-os-hud .bg-background-base {
   background-color: var(--background-base) !important;
 }
 
-.jarvis-hud .bg-surface-elevated {
+.jarvis-os-hud .bg-surface-elevated {
   background-color: var(--surface-elevated) !important;
 }
 
-.jarvis-hud .hover\:bg-surface-hover:hover {
+.jarvis-os-hud .hover\:bg-surface-hover:hover {
   background-color: var(--surface-hover) !important;
 }
 
-.jarvis-hud .bg-accent-primary {
+.jarvis-os-hud .bg-accent-primary {
   background-color: var(--accent-primary) !important;
 }
 
-.jarvis-hud .hover\:bg-accent-primary\/90:hover {
+.jarvis-os-hud .hover\:bg-accent-primary\/90:hover {
   background-color: var(--accent-primary-hover) !important;
 }
 
-.jarvis-hud .text-text-primary {
+.jarvis-os-hud .text-text-primary {
   color: var(--text-primary) !important;
 }
 
-.jarvis-hud .text-text-secondary {
+.jarvis-os-hud .text-text-secondary {
   color: var(--text-secondary) !important;
 }
 
-.jarvis-hud .text-text-tertiary {
+.jarvis-os-hud .text-text-tertiary {
   color: var(--text-tertiary) !important;
 }
 
-.jarvis-hud .placeholder\:text-text-tertiary::placeholder {
+.jarvis-os-hud .placeholder\:text-text-tertiary::placeholder {
   color: var(--text-tertiary) !important;
 }
 
-.jarvis-hud .border-border-subtle {
+.jarvis-os-hud .border-border-subtle {
   border-color: var(--border-subtle) !important;
 }
 
-.jarvis-hud .ring-accent-primary\/50:focus {
+.jarvis-os-hud .ring-accent-primary\/50:focus {
   --tw-ring-color: color-mix(in srgb, var(--accent-primary) 50%, transparent) !important;
 }
 
@@ -90,19 +90,522 @@
 }
 
 /* Scrollbar styling for chat feed */
-.jarvis-hud ::-webkit-scrollbar {
+.jarvis-os-hud ::-webkit-scrollbar {
   width: 6px;
 }
 
-.jarvis-hud ::-webkit-scrollbar-track {
+.jarvis-os-hud ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.jarvis-hud ::-webkit-scrollbar-thumb {
+.jarvis-os-hud ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
 }
 
-.jarvis-hud ::-webkit-scrollbar-thumb:hover {
+.jarvis-os-hud ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+/* HUD message text — no bubble, direct on glass */
+.jarvis-message-user {
+  color: #00f0ff;
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.45);
+  font-weight: 500;
+}
+
+.jarvis-message-assistant {
+  color: #e6fdff;
+  text-shadow: 0 0 6px rgba(0, 212, 255, 0.25);
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Memory orb */
+.memory-orb-container {
+  pointer-events: auto;
+}
+
+.memory-orb-ring {
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.memory-orb-ring--forward {
+  animation: spin 20s linear infinite;
+}
+
+.memory-orb-ring--reverse {
+  animation: spin-reverse 35s linear infinite;
+}
+
+.memory-orb-ring--fast {
+  animation: spin 8s linear infinite;
+}
+
+.memory-orb-core {
+  transition: all 0.3s ease;
+  animation: memory-orb-idle-pulse 3s ease-in-out infinite alternate;
+}
+
+.memory-orb-glow {
+  animation: memory-orb-idle-glow 3s ease-in-out infinite alternate;
+}
+
+.memory-orb--recalling .memory-orb-ring--forward {
+  animation-duration: 5s;
+}
+
+.memory-orb--recalling .memory-orb-ring--reverse {
+  animation-duration: 9s;
+}
+
+.memory-orb--recalling .memory-orb-ring--fast {
+  animation-duration: 3s;
+}
+
+.memory-orb--recalling .memory-orb-core {
+  background: linear-gradient(to top right, #00f0ff, #e0fdff);
+  box-shadow: 0 0 40px #00f0ff, 0 0 80px rgba(0, 240, 255, 0.6);
+  animation: memory-orb-core-pulse 2.8s ease-in-out infinite alternate;
+}
+
+.memory-orb--recalling .memory-orb-glow {
+  animation: memory-orb-glow-pulse 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes memory-orb-idle-pulse {
+  from {
+    transform: scale(1);
+    filter: brightness(0.9);
+  }
+  to {
+    transform: scale(1.15);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes memory-orb-idle-glow {
+  from {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.8;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes memory-orb-core-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow: 0 0 25px #00f0ff, 0 0 50px rgba(0, 240, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.25);
+    filter: brightness(1.35);
+    box-shadow: 0 0 50px #00f0ff, 0 0 100px rgba(0, 240, 255, 0.7);
+  }
+  100% {
+    transform: scale(1.1);
+    filter: brightness(1.15);
+    box-shadow: 0 0 35px #00f0ff, 0 0 70px rgba(0, 240, 255, 0.55);
+  }
+}
+
+@keyframes memory-orb-glow-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.6);
+  }
+  100% {
+    opacity: 0.75;
+    transform: scale(1.3);
+  }
+}
+
+.memory-popover {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.memory-popover::-webkit-scrollbar {
+  width: 6px;
+}
+
+.memory-popover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+/* Task capsule */
+.text-shadow-cyan {
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.45);
+}
+
+.task-capsule--closing {
+  animation: task-capsule-vanish 0.6s ease-in forwards;
+}
+
+@keyframes task-capsule-vanish {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  40% {
+    opacity: 0.7;
+    transform: scale(1.05);
+    filter: brightness(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.2);
+    filter: brightness(2);
+  }
+}
+
+/* Task orb */
+.task-orb-button {
+  animation: task-orb-idle-pulse 4s ease-in-out infinite alternate;
+}
+
+.task-orb-ring--outer {
+  animation: spin 20s linear infinite;
+  transform-origin: center;
+}
+
+.task-orb-ring--inner {
+  animation: spin-reverse 12s linear infinite;
+  transform-origin: center;
+}
+
+.task-orb-glow {
+  animation: task-orb-glow-breathe 3s ease-in-out infinite alternate;
+}
+
+.task-orb-core {
+  animation: task-orb-core-breathe 3s ease-in-out infinite alternate;
+}
+
+@keyframes task-orb-idle-pulse {
+  from {
+    box-shadow: 0 0 20px rgba(0, 219, 231, 0.12);
+  }
+  to {
+    box-shadow: 0 0 40px rgba(0, 219, 231, 0.28);
+  }
+}
+
+@keyframes task-orb-glow-breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes task-orb-core-breathe {
+  from {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  to {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+  }
+}
+
+.task-orb-popover {
+  animation: task-orb-popover-appear 0.2s ease-out forwards;
+}
+
+@keyframes task-orb-popover-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Task orb satellites */
+.task-orb-satellite {
+  pointer-events: none;
+}
+
+.task-orb-satellite--1 {
+  animation: task-orb-orbit-1 6s linear infinite;
+}
+
+.task-orb-satellite--2 {
+  animation: task-orb-orbit-2 9s linear infinite;
+}
+
+.task-orb-satellite--3 {
+  animation: task-orb-orbit-3 12s linear infinite;
+}
+
+@keyframes task-orb-orbit-1 {
+  from {
+    transform: rotate(0deg) translateX(28px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(28px) rotate(-360deg);
+  }
+}
+
+@keyframes task-orb-orbit-2 {
+  from {
+    transform: rotate(120deg) translateX(34px) rotate(-120deg);
+  }
+  to {
+    transform: rotate(480deg) translateX(34px) rotate(-480deg);
+  }
+}
+
+@keyframes task-orb-orbit-3 {
+  from {
+    transform: rotate(240deg) translateX(40px) rotate(-240deg);
+  }
+  to {
+    transform: rotate(600deg) translateX(40px) rotate(-600deg);
+  }
+}
+
+/* Task orb ripples */
+.task-orb-ripple {
+  animation: task-orb-ripple 3s ease-out infinite;
+}
+
+.task-orb-ripple--delay {
+  animation-delay: 1.5s;
+}
+
+@keyframes task-orb-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Task panel */
+.task-panel {
+  animation: task-panel-appear 0.25s ease-out forwards;
+}
+
+@keyframes task-panel-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Glass panel from reference design */
+.jarvis-glass-panel {
+  background: rgba(16, 20, 22, 0.45);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 219, 231, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(0, 219, 231, 0.05),
+    0 20px 50px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.jarvis-glass-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.5), transparent);
+}
+
+.jarvis-glass-panel--accent-left {
+  border-left: 3px solid rgba(0, 242, 255, 0.6);
+}
+
+.jarvis-glass-panel--accent-right {
+  border-right: 3px solid rgba(255, 140, 0, 0.6);
+}
+
+/* Input corner brackets */
+.jarvis-input-bracket {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: rgba(0, 242, 255, 0.6);
+  border-style: solid;
+  pointer-events: none;
+}
+
+.jarvis-input-bracket--tl {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+
+.jarvis-input-bracket--tr {
+  top: 0;
+  right: 0;
+  border-width: 1px 1px 0 0;
+}
+
+.jarvis-input-bracket--bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1px 1px;
+}
+
+.jarvis-input-bracket--br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* Mic pulse */
+.jarvis-mic-pulse {
+  animation: jarvis-mic-pulse 2s ease-in-out infinite;
+}
+
+@keyframes jarvis-mic-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(0, 242, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 242, 255, 0);
+  }
+}
+
+/* Segment bar */
+.jarvis-segment-bar {
+  display: flex;
+  gap: 2px;
+}
+
+.jarvis-segment-bar > div {
+  width: 7px;
+  height: 12px;
+  background: rgba(0, 242, 255, 0.15);
+  border-radius: 1px;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.jarvis-segment-bar > div.active {
+  background: #00f2ff;
+  box-shadow: 0 0 6px rgba(0, 242, 255, 0.6);
+}
+
+/* Floating dialogue bubble for task capsules */
+.jarvis-float-bubble {
+  background: rgba(16, 20, 22, 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 219, 231, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(0, 219, 231, 0.04),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.jarvis-float-bubble::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 242, 255, 0.5), transparent 80%);
+}
+
+/* Neural load ring */
+.jarvis-neural-ring {
+  transform: rotate(-90deg);
+}
+
+.jarvis-neural-ring-track {
+  fill: none;
+  stroke: rgba(0, 242, 255, 0.1);
+  stroke-width: 6;
+}
+
+.jarvis-neural-ring-value {
+  fill: none;
+  stroke: #00f2ff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.7s ease;
+  filter: drop-shadow(0 0 4px rgba(0, 242, 255, 0.5));
+}
+
+/* Task orb enter animation */
+.jarvis-task-orb-enter {
+  animation: jarvis-task-orb-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes jarvis-task-orb-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

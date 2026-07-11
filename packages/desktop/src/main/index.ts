@@ -6,7 +6,7 @@ import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
 import type { Event } from "electron"
-import { app } from "electron"
+import { app, BrowserWindow } from "electron"
 
 import { Deferred, Effect, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
@@ -15,6 +15,7 @@ import type { ServerReadyData } from "../preload/types"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
+import { initJarvisMetrics, stopJarvisMetrics } from "./jarvis-metrics"
 import { forwardInitializationFailure } from "./initialization"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
 import { parseMarkdown } from "./markdown"
@@ -219,6 +220,7 @@ const main = Effect.gen(function* () {
   app.on("will-quit", () => {
     setAppQuitting()
     void stopSidecars()
+    stopJarvisMetrics()
   })
 
   app.on("child-process-gone", (_event, details) => {
@@ -261,6 +263,25 @@ const main = Effect.gen(function* () {
   app.setAsDefaultProtocolClient("opencode")
   registerRendererProtocol()
   setDockIcon()
+
+  yield* Effect.promise(() =>
+    initJarvisMetrics({
+      userDataPath: app.getPath("userData"),
+      onUpdate: (snapshot) => {
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (win.isDestroyed()) continue
+          win.webContents.send("jarvis:metrics-update", snapshot)
+        }
+      },
+    }),
+  ).pipe(
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        logger.warn("failed to initialize metrics service", error)
+      }),
+    ),
+  )
+
   const updater = setupAutoUpdater(stopSidecars)
   registerIpcHandlers({
     killSidecar: () => killSidecar(),
