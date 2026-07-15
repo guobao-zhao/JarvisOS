@@ -92,6 +92,29 @@ export type JarvisModelRoutingConfigSnapshot = {
   roleBindings: Record<JarvisModelRole, string>
 }
 
+export type JarvisWorkPhase =
+  | "chat"
+  | "triage"
+  | "clarify"
+  | "design"
+  | "plan"
+  | "execute"
+  | "verify"
+  | "debug"
+  | "review"
+
+export type JarvisModelDecision = {
+  id: string
+  taskId?: string
+  phase: JarvisWorkPhase
+  selectedRole: JarvisModelRole
+  selectedModelId: string
+  reason: string
+  confidence: number
+  overrideable: boolean
+  createdAt: number
+}
+
 export type JarvisModelConnectionResult =
   | { ok: true; status: number; latencyMs: number; modelID: string }
   | { ok: false; status?: number; latencyMs: number; modelID: string; error: string }
