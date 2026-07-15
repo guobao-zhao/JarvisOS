@@ -1,3 +1,5 @@
+import type { JarvisStreamChatOptions } from "../../preload/types"
+
 export interface StreamMessage {
   role: "user" | "assistant" | "system"
   content: string
@@ -7,6 +9,7 @@ export async function streamChat(
   messages: StreamMessage[],
   onText: (delta: string) => void,
   onError: (error: Error) => void,
+  options?: JarvisStreamChatOptions,
 ): Promise<void> {
   return new Promise((resolve) => {
     const cleanup = window.api.jarvisStreamChat(messages, {
@@ -22,6 +25,6 @@ export async function streamChat(
         cleanup()
         resolve()
       },
-    })
+    }, options)
   })
 }

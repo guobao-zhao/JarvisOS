@@ -39,6 +39,7 @@ async function runAssistantTurn(taskId: string) {
       jarvisActions.appendTaskAssistantContent(taskId, `\n\n[错误] ${error.message}`)
       fullResponse += `\n\n[错误] ${error.message}`
     },
+    { taskId },
   )
 
   void (async () => {

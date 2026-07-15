@@ -1,4 +1,5 @@
-import { createMemo, createSignal, For, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
+import type { JarvisModelDecision, JarvisModelRole } from "../../preload/types"
 import { jarvisActions, jarvisStore, type Message } from "./Store"
 import { streamChat } from "./LLM"
 import { searchMemories, writeMemory } from "./Memory"
@@ -14,9 +15,20 @@ function formatTime(timestamp: number): string {
   return d.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })
 }
 
+const roleLabels: Record<JarvisModelRole, string> = {
+  daily: "日常",
+  designer: "GPT 设计",
+  worker: "Kimi 执行",
+  reviewer: "校验",
+  fallback: "兜底",
+}
+
 export function TaskPanel() {
   const [inputText, setInputText] = createSignal("")
   const [isSending, setIsSending] = createSignal(false)
+  const [modelDecisions, setModelDecisions] = createSignal<JarvisModelDecision[]>([])
+  const [modelOverride, setModelOverride] = createSignal<JarvisModelRole | null>(null)
+  const [overrideSaving, setOverrideSaving] = createSignal(false)
   const [panelStyle, setPanelStyle] = createSignal<Record<string, string>>({
     opacity: "0",
     transform: "scale(0.85)",
@@ -33,7 +45,26 @@ export function TaskPanel() {
 
   const sourceRect = createMemo(() => taskPanelSourceRect())
 
+  createEffect(() => {
+    const id = task()?.id
+    if (!id) {
+      setModelDecisions([])
+      return
+    }
+    void window.api.jarvisModelDecisionHistory(id).then((items) => {
+      setModelDecisions(items.slice(-8))
+    }).catch((reason) => {
+      console.warn("Model decision history failed:", reason)
+    })
+  })
+
   onMount(() => {
+    const unsubscribeDecision = window.api.jarvisModelDecisionSubscribe((decision) => {
+      const id = task()?.id
+      if (!id || decision.taskId !== id) return
+      setModelDecisions((current) => [...current.filter((item) => item.id !== decision.id), decision].slice(-8))
+    })
+
     const rect = sourceRect()
     if (rect && panelRef) {
       setPanelStyle({
@@ -76,6 +107,10 @@ export function TaskPanel() {
         "border-radius": "22px",
       })
     }
+
+    onCleanup(() => {
+      unsubscribeDecision()
+    })
   })
 
   function startResize(e: PointerEvent) {
@@ -198,6 +233,7 @@ export function TaskPanel() {
         jarvisActions.appendTaskAssistantContent(taskId, `\n\n[错误] ${error.message}`)
         fullResponse += `\n\n[错误] ${error.message}`
       },
+      { taskId },
     )
 
     jarvisActions.setStatus("speaking")
@@ -228,6 +264,20 @@ export function TaskPanel() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       void handleSend()
+    }
+  }
+
+  async function overrideModel(role: JarvisModelRole | null) {
+    const t = task()
+    if (!t || overrideSaving()) return
+    setOverrideSaving(true)
+    try {
+      await window.api.jarvisModelOverrideTask(t.id, role)
+      setModelOverride(role)
+    } catch (reason) {
+      console.warn("Model override failed:", reason)
+    } finally {
+      setOverrideSaving(false)
     }
   }
 
@@ -288,6 +338,63 @@ export function TaskPanel() {
                 <For each={t().messages}>
                   {(message) => <TaskMessageBubble message={message} />}
                 </For>
+              </div>
+
+              <div class="border-t border-cyan-300/10 px-5 py-3">
+                <div class="mb-2 flex items-center justify-between gap-3">
+                  <div class="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200/55">Model Timeline</div>
+                  <div class="flex items-center gap-1">
+                    <button
+                      type="button"
+                      class="rounded border border-violet-300/25 px-2 py-1 text-[10px] text-violet-100 transition hover:border-violet-200/60 disabled:opacity-50"
+                      disabled={overrideSaving()}
+                      onClick={() => void overrideModel("designer")}
+                    >
+                      Pin GPT
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded border border-cyan-300/25 px-2 py-1 text-[10px] text-cyan-100 transition hover:border-cyan-200/60 disabled:opacity-50"
+                      disabled={overrideSaving()}
+                      onClick={() => void overrideModel("worker")}
+                    >
+                      Pin Kimi
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded border border-white/10 px-2 py-1 text-[10px] text-white/60 transition hover:border-white/25 disabled:opacity-50"
+                      disabled={overrideSaving()}
+                      onClick={() => void overrideModel(null)}
+                    >
+                      Auto
+                    </button>
+                  </div>
+                </div>
+                <Show
+                  when={modelDecisions().length > 0}
+                  fallback={<div class="text-[10px] text-cyan-200/35">等待下一次模型决策</div>}
+                >
+                  <div class="space-y-2">
+                    <For each={modelDecisions()}>
+                      {(decision) => (
+                        <div class="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2">
+                          <div class="flex items-center justify-between gap-3">
+                            <div class="text-[11px] font-semibold text-cyan-50">
+                              {decision.phase} · {roleLabels[decision.selectedRole]}
+                            </div>
+                            <div class="text-[10px] text-cyan-200/40">{formatTime(decision.createdAt)}</div>
+                          </div>
+                          <div class="mt-1 truncate text-[10px] text-white/50">
+                            {decision.selectedModelId} · {Math.round(decision.confidence * 100)}% · {decision.reason}
+                          </div>
+                        </div>
+                      )}
+                    </For>
+                  </div>
+                </Show>
+                <Show when={modelOverride()}>
+                  {(role) => <div class="mt-2 text-[10px] text-amber-100/70">当前任务已固定：{roleLabels[role()]}</div>}
+                </Show>
               </div>
 
               {/* Input */}
