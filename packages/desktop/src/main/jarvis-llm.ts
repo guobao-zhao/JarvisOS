@@ -2,6 +2,7 @@ import { BrowserWindow, type IpcMainEvent } from "electron"
 import { createToolRegistry, MemorySkill, type ToolRegistry, type ToolUsageMetric } from "@jarvis-os/tools"
 
 import { getEffectiveJarvisModelConfig, getJarvisModelRoutingConfig } from "./jarvis-model-config"
+import { resolveChatCompletionsURL } from "./jarvis-model-connection"
 import { recordLLMCall } from "./jarvis-metrics"
 import { prepareJarvisMemoryEnv } from "./jarvis-memory"
 import { routeJarvisModel, type JarvisModelDecision } from "./jarvis-model-router"
@@ -163,7 +164,7 @@ export async function handleJarvisStreamChat(
     const inputChars = currentMessages.reduce((sum, m) => sum + m.content.length, 0)
 
     try {
-      const response = await fetch(`${modelConfig.baseURL}/chat/completions`, {
+      const response = await fetch(resolveChatCompletionsURL(modelConfig.baseURL), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

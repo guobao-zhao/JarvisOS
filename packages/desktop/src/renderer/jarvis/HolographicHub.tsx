@@ -1,4 +1,4 @@
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js"
+import { createSignal, For, Index, onCleanup, onMount, Show } from "solid-js"
 import { JarvisCore } from "@/components/hud/core"
 import type { JSX } from "solid-js"
 import type {
@@ -559,26 +559,26 @@ export function HolographicHub() {
 
             <div class="mt-5 grid gap-4 lg:grid-cols-[1fr_260px]">
               <div class="space-y-3">
-                <For each={routingDraft().profiles}>
+                <Index each={routingDraft().profiles}>
                   {(profile) => {
-                    const saved = () => routingConfig()?.profiles.find((item) => item.id === profile.id)
-                    const result = () => profileTestResult()[profile.id]
+                    const saved = () => routingConfig()?.profiles.find((item) => item.id === profile().id)
+                    const result = () => profileTestResult()[profile().id]
                     return (
                       <section class="jarvis-model-profile-card">
                         <div class="flex items-start justify-between gap-3">
                           <div>
                             <input
                               class="jarvis-model-input text-sm font-semibold"
-                              value={profile.label}
-                              onInput={(event) => updateProfile(profile.id, { label: event.currentTarget.value })}
+                              value={profile().label}
+                              onInput={(event) => updateProfile(profile().id, { label: event.currentTarget.value })}
                             />
-                            <div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/35">{profile.id}</div>
+                            <div class="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/35">{profile().id}</div>
                           </div>
                           <div class="flex items-center gap-2">
-                            <button type="button" class="jarvis-mini-button" onClick={() => testProfile(profile)} disabled={profileTesting() === profile.id || modelSaving()}>
-                              {profileTesting() === profile.id ? "Testing" : "Test"}
+                            <button type="button" class="jarvis-mini-button" onClick={() => testProfile(profile())} disabled={profileTesting() === profile().id || modelSaving()}>
+                              {profileTesting() === profile().id ? "Testing" : "Test"}
                             </button>
-                            <button type="button" class="jarvis-mini-button jarvis-mini-button--danger" onClick={() => removeProfile(profile.id)} disabled={routingDraft().profiles.length <= 1 || modelSaving()}>
+                            <button type="button" class="jarvis-mini-button jarvis-mini-button--danger" onClick={() => removeProfile(profile().id)} disabled={routingDraft().profiles.length <= 1 || modelSaving()}>
                               Remove
                             </button>
                           </div>
@@ -586,11 +586,11 @@ export function HolographicHub() {
                         <div class="mt-3 grid gap-3 md:grid-cols-2">
                           <label class="block space-y-1.5">
                             <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">Base URL</span>
-                            <input class="jarvis-model-input" value={profile.baseURL} onInput={(event) => updateProfile(profile.id, { baseURL: event.currentTarget.value })} />
+                            <input class="jarvis-model-input" value={profile().baseURL} onInput={(event) => updateProfile(profile().id, { baseURL: event.currentTarget.value })} />
                           </label>
                           <label class="block space-y-1.5">
                             <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">Model ID</span>
-                            <input class="jarvis-model-input" value={profile.modelID} onInput={(event) => updateProfile(profile.id, { modelID: event.currentTarget.value })} />
+                            <input class="jarvis-model-input" value={profile().modelID} onInput={(event) => updateProfile(profile().id, { modelID: event.currentTarget.value })} />
                           </label>
                         </div>
                         <label class="mt-3 block space-y-1.5">
@@ -598,9 +598,9 @@ export function HolographicHub() {
                           <input
                             type="password"
                             class="jarvis-model-input"
-                            value={profile.apiKey ?? ""}
+                            value={profile().apiKey ?? ""}
                             placeholder={saved()?.hasApiKey ? "已保存，留空则沿用" : "请输入"}
-                            onInput={(event) => updateProfile(profile.id, { apiKey: event.currentTarget.value })}
+                            onInput={(event) => updateProfile(profile().id, { apiKey: event.currentTarget.value })}
                           />
                         </label>
                         <Show when={result()}>
@@ -620,7 +620,7 @@ export function HolographicHub() {
                       </section>
                     )
                   }}
-                </For>
+                </Index>
                 <button type="button" class="jarvis-mini-button w-full" onClick={addProfile} disabled={modelSaving()}>
                   Add Profile
                 </button>
@@ -634,9 +634,9 @@ export function HolographicHub() {
                       <label class="block space-y-1.5">
                         <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">{roleLabels[role]}</span>
                         <select class="jarvis-model-input" value={routingDraft().roleBindings[role]} onChange={(event) => updateRoleBinding(role, event.currentTarget.value)}>
-                          <For each={routingDraft().profiles}>
-                            {(profile) => <option value={profile.id}>{profile.label || profile.modelID}</option>}
-                          </For>
+                          <Index each={routingDraft().profiles}>
+                            {(profile) => <option value={profile().id}>{profile().label || profile().modelID}</option>}
+                          </Index>
                         </select>
                       </label>
                     )}
