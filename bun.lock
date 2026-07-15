@@ -391,6 +391,7 @@
       },
       "devDependencies": {
         "@actions/artifact": "4.0.0",
+        "@jarvis-os/growth": "workspace:*",
         "@jarvis-os/memory": "workspace:*",
         "@jarvis-os/metrics": "workspace:*",
         "@jarvis-os/tools": "workspace:*",
@@ -507,6 +508,16 @@
         "typescript": "catalog:",
       },
     },
+    "packages/growth": {
+      "name": "@jarvis-os/growth",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/http-recorder": {
       "name": "@opencode-ai/http-recorder",
       "version": "1.17.13",
@@ -571,6 +582,7 @@
       "name": "@jarvis-os/metrics",
       "version": "0.1.0",
       "dependencies": {
+        "@jarvis-os/growth": "workspace:*",
         "@opencode-ai/effect-sqlite-node": "workspace:*",
         "effect": "catalog:",
       },
@@ -1763,6 +1775,8 @@
     "@isaacs/fs-minipass": ["@isaacs/fs-minipass@4.0.1", "", { "dependencies": { "minipass": "^7.0.4" } }, "sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w=="],
 
     "@isaacs/string-locale-compare": ["@isaacs/string-locale-compare@1.1.0", "", {}, "sha512-SQ7Kzhh9+D+ZW9MA0zkYv3VXhIDNx+LzM6EJ+/65I3QY+enU6Itte7E5XX7EWrqLW2FN4n06GWzBnPoC3th2aQ=="],
+
+    "@jarvis-os/growth": ["@jarvis-os/growth@workspace:packages/growth"],
 
     "@jarvis-os/memory": ["@jarvis-os/memory@workspace:packages/memory"],
 

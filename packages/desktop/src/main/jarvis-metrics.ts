@@ -13,6 +13,8 @@ import {
   type MemoryRecallRecord,
   type MemoryMetricsSnapshot,
 } from "@jarvis-os/metrics/collectors/memory"
+import { recordGrowthReportMetrics } from "@jarvis-os/metrics/collectors/growth"
+import type { GrowthReport } from "@jarvis-os/growth"
 import {
   createSystemCollector,
   type SystemMetricsSnapshot,
@@ -67,6 +69,11 @@ export async function recordMemoryRecall(record: MemoryRecallRecord): Promise<vo
   await recordMemoryRecallCollector(service, record)
   const snapshot = await getMemoryMetricsSnapshot(service)
   updateAndBroadcast({ memory: snapshot })
+}
+
+export async function recordGrowthReport(report: GrowthReport): Promise<void> {
+  if (!service) return
+  await recordGrowthReportMetrics(service, report)
 }
 
 export function getMetricsSnapshot(): JarvisMetricsSnapshot {

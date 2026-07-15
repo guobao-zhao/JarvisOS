@@ -1,7 +1,6 @@
 import { ChatFeed } from "./ChatFeed"
 import { InputBar } from "./InputBar"
-import { LeftSidebar } from "./LeftSidebar"
-import { RightSidebar } from "./RightSidebar"
+import { HolographicHub } from "./HolographicHub"
 import { StatusBar } from "./StatusBar"
 import { TaskPanel } from "./TaskPanel"
 import "./index.css"
@@ -16,9 +15,8 @@ export function JarvisOSHUD() {
           <InputBar />
         </div>
       </div>
+      <HolographicHub />
       <TaskPanel />
-      <LeftSidebar />
-      <RightSidebar />
     </div>
   )
 }

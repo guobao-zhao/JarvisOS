@@ -38,6 +38,7 @@
     "@lydell/node-pty": "catalog:",
     "@opencode-ai/app": "workspace:*",
     "@opencode-ai/ui": "workspace:*",
+    "@jarvis-os/growth": "workspace:*",
     "@jarvis-os/memory": "workspace:*",
     "@jarvis-os/metrics": "workspace:*",
     "@jarvis-os/tools": "workspace:*",

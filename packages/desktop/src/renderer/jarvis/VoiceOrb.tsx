@@ -5,6 +5,12 @@ import { voiceAPI } from "./Voice"
 export function VoiceOrb() {
   const isBusy = () => jarvisStore.status === "thinking"
   const isListening = () => jarvisStore.isListening
+  const modeClass = () => {
+    if (isListening()) return "voice-orb--listening"
+    if (jarvisStore.status === "thinking") return "voice-orb--thinking"
+    if (jarvisStore.status === "speaking") return "voice-orb--speaking"
+    return "voice-orb--idle"
+  }
 
   function toggleVoice() {
     if (isBusy()) return
@@ -33,19 +39,11 @@ export function VoiceOrb() {
       type="button"
       onClick={toggleVoice}
       disabled={isBusy() || !voiceAPI.isRecognitionAvailable}
-      class={`pointer-events-auto z-10 flex h-16 w-16 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
-        isListening()
-          ? "voice-orb--listening scale-110 shadow-[0_0_50px_rgba(255,255,255,0.9)]"
-          : "shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_45px_rgba(255,255,255,0.7)] hover:scale-105"
-      }`}
+      class={`voice-orb pointer-events-auto z-10 flex h-16 w-16 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-40 ${modeClass()}`}
       aria-label={isListening() ? "停止聆听" : "语音输入"}
     >
-      {/* White energy orb core */}
-      <div
-        class={`h-10 w-10 rounded-full bg-gradient-to-tr from-white via-cyan-50 to-cyan-200 ${
-          isListening() ? "animate-pulse" : ""
-        }`}
-      />
+      <div class="voice-orb__aura" />
+      <div class="voice-orb__core" />
     </button>
   )
 }

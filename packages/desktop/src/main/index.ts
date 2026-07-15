@@ -15,6 +15,8 @@ import type { ServerReadyData } from "../preload/types"
 import { checkAppExists, resolveAppPath } from "./apps"
 import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
+import { initJarvisIntelligence } from "./jarvis-intelligence"
+import { initJarvisGrowth } from "./jarvis-growth"
 import { initJarvisMetrics, stopJarvisMetrics } from "./jarvis-metrics"
 import { forwardInitializationFailure } from "./initialization"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
@@ -263,6 +265,9 @@ const main = Effect.gen(function* () {
   app.setAsDefaultProtocolClient("opencode")
   registerRendererProtocol()
   setDockIcon()
+
+  initJarvisGrowth()
+  initJarvisIntelligence()
 
   yield* Effect.promise(() =>
     initJarvisMetrics({

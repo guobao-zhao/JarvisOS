@@ -32,3 +32,20 @@ UPCOMING_CHANGELOG.md
 logs/
 *.bun-build
 tsconfig.tsbuildinfo
+
+# JarvisOS local verification artifacts
+.claude-*.png
+.codegraph/
+.DS_Store
+.turbo/
+
+# Python local caches
+__pycache__/
+*.py[cod]
+
+# Local TTS model/runtime artifacts
+tools/cosyvoice/
+tools/**/pretrained_models/
+tools/**/cache/
+tools/**/.git/
+tools/**/*.wav

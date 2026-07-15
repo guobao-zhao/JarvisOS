@@ -198,8 +198,22 @@ function initConsoleTransport() {
       log.transports.console.level = false
     }
   }
+
+  // Suppress async broken-pipe errors on stdout/stderr so they don't bubble up as uncaught exceptions
+  // when the dev server or parent terminal closes its pipe.
+  const swallowBrokenPipe = (err: Error) => {
+    if (isBrokenPipe(err)) return
+    // Re-emit non-broken-pipe errors so the default handler can deal with them.
+    process.nextTick(() => process.stderr.emit("error", err))
+  }
+  process.stdout.on("error", swallowBrokenPipe)
+  process.stderr.on("error", swallowBrokenPipe)
 }
 
-function isBrokenPipe(err: unknown) {
-  return typeof err === "object" && err !== null && "code" in err && err.code === "EPIPE"
+function isBrokenPipe(err: unknown): err is NodeJS.ErrnoException {
+  if (typeof err !== "object" || err === null) return false
+  const errno = err as NodeJS.ErrnoException
+  if (errno.code === "EPIPE" || errno.code === "ECONNRESET") return true
+  const message = errno.message ?? String(err)
+  return message.includes("EPIPE") || message.includes("ECONNRESET")
 }

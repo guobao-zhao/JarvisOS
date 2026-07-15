@@ -4,6 +4,7 @@ export type MemorySource =
   | "user_manual"
   | "task"
   | "insight"
+  | "growth"
 
 export interface MemoryDocument {
   id: string

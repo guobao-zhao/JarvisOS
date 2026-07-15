@@ -9,12 +9,14 @@
     ".": "./src/index.ts",
     "./collectors/system": "./src/collectors/system.ts",
     "./collectors/llm": "./src/collectors/llm.ts",
-    "./collectors/memory": "./src/collectors/memory.ts"
+    "./collectors/memory": "./src/collectors/memory.ts",
+    "./collectors/growth": "./src/collectors/growth.ts"
   },
   "scripts": {
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
+    "@jarvis-os/growth": "workspace:*",
     "@opencode-ai/effect-sqlite-node": "workspace:*",
     "effect": "catalog:"
   },

@@ -144,7 +144,11 @@ function speakWithF5TTSStream(text: string): Promise<void> {
             binaryOffset += chunk.length
             if (binaryOffset >= binaryTargetLen) {
               receivedSentences += 1
-              enqueueWavBlob(new Blob([binaryBuffer]))
+              const wavBuffer = binaryBuffer.buffer.slice(
+                binaryBuffer.byteOffset,
+                binaryBuffer.byteOffset + binaryBuffer.byteLength,
+              ) as ArrayBuffer
+              enqueueWavBlob(new Blob([wavBuffer]))
               binaryBuffer = null
             }
           }
