@@ -10,8 +10,8 @@ const config: JarvisModelConfig = {
 }
 
 describe("testModelConnection", () => {
-  test("normalizes Kimi Coding shortcut into the Moonshot OpenAI-compatible endpoint", () => {
-    expect(resolveChatCompletionsURL("https://api.kimi.com/coding")).toBe("https://api.moonshot.cn/v1/chat/completions")
+  test("normalizes Kimi Coding shortcut into its OpenAI-compatible endpoint", () => {
+    expect(resolveChatCompletionsURL("https://api.kimi.com/coding")).toBe("https://api.kimi.com/coding/v1/chat/completions")
   })
 
   test("keeps a full chat completions endpoint unchanged", () => {

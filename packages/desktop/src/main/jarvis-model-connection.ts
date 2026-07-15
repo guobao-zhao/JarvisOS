@@ -18,7 +18,7 @@ export function resolveChatCompletionsURL(baseURL: string) {
   const parsed = new URL(normalized)
 
   if (parsed.hostname === "api.kimi.com" && parsed.pathname === "/coding") {
-    return "https://api.moonshot.cn/v1/chat/completions"
+    return "https://api.kimi.com/coding/v1/chat/completions"
   }
 
   if (parsed.pathname.endsWith("/chat/completions")) {
