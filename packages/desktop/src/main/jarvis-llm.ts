@@ -1,9 +1,12 @@
-import type { IpcMainEvent } from "electron"
+import { BrowserWindow, type IpcMainEvent } from "electron"
 import { createToolRegistry, MemorySkill, type ToolRegistry, type ToolUsageMetric } from "@jarvis-os/tools"
 
-import { getKimiCredentials } from "./jarvis-credential"
+import { getEffectiveJarvisModelConfig, getJarvisModelRoutingConfig } from "./jarvis-model-config"
 import { recordLLMCall } from "./jarvis-metrics"
 import { prepareJarvisMemoryEnv } from "./jarvis-memory"
+import { routeJarvisModel, type JarvisModelDecision } from "./jarvis-model-router"
+import type { JarvisModelRole } from "./jarvis-vault"
+import type { JarvisStreamChatOptions } from "../preload/types"
 
 export interface StreamChatMessage {
   role: "user" | "assistant" | "system" | "tool"
@@ -108,13 +111,46 @@ export async function getToolUsageMetrics(): Promise<readonly ToolUsageMetric[]>
   return Array.from(registry.getUsageMetrics().values())
 }
 
-export async function handleJarvisStreamChat(event: IpcMainEvent, messages: StreamChatMessage[]) {
-  const creds = await getKimiCredentials()
+function broadcastModelDecision(decision: JarvisModelDecision): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (win.isDestroyed()) continue
+    win.webContents.send("jarvis:model-decision", decision)
+  }
+}
+
+async function availableModelIds(): Promise<Record<JarvisModelRole, string | null>> {
+  const routing = await getJarvisModelRoutingConfig()
+  const find = (role: JarvisModelRole) => {
+    const id = routing?.roleBindings[role]
+    return routing?.profiles.find((profile) => profile.id === id)?.modelID ?? null
+  }
+  return {
+    daily: find("daily"),
+    designer: find("designer"),
+    worker: find("worker"),
+    reviewer: find("reviewer"),
+    fallback: find("fallback"),
+  }
+}
+
+export async function handleJarvisStreamChat(
+  event: IpcMainEvent,
+  messages: StreamChatMessage[],
+  options: JarvisStreamChatOptions = {},
+) {
   const sender = event.sender
   const registry = await toolsReady
+  const decision = routeJarvisModel({
+    taskId: options.taskId,
+    messages,
+    failureCount: options.failureCount,
+    availableModels: await availableModelIds(),
+  })
+  broadcastModelDecision(decision)
+  const modelConfig = await getEffectiveJarvisModelConfig(decision.selectedRole)
 
-  if (!creds) {
-    sender.send("jarvis:stream-chat:error", "Kimi credentials not found")
+  if (!modelConfig) {
+    sender.send("jarvis:stream-chat:error", "模型配置未找到")
     return
   }
 
@@ -127,14 +163,14 @@ export async function handleJarvisStreamChat(event: IpcMainEvent, messages: Stre
     const inputChars = currentMessages.reduce((sum, m) => sum + m.content.length, 0)
 
     try {
-      const response = await fetch(`${creds.baseURL}/chat/completions`, {
+      const response = await fetch(`${modelConfig.baseURL}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${creds.apiKey}`,
+          Authorization: `Bearer ${modelConfig.apiKey}`,
         },
         body: JSON.stringify({
-          model: "kimi-k2-0711-preview",
+          model: modelConfig.modelID,
           messages: currentMessages,
           stream: true,
           tools: toOpenAITools(registry),
@@ -147,13 +183,13 @@ export async function handleJarvisStreamChat(event: IpcMainEvent, messages: Stre
         void recordLLMCall({
           durationMs: Math.round(performance.now() - roundStart),
           success: false,
-          error: `Kimi API ${response.status}`,
-          model: "kimi-k2-0711-preview",
+          error: `Model API ${response.status}`,
+          model: modelConfig.modelID,
           inputChars,
           outputChars: 0,
           toolRounds,
         })
-        sender.send("jarvis:stream-chat:error", `Kimi API ${response.status}: ${body}`)
+        sender.send("jarvis:stream-chat:error", `Model API ${response.status}: ${body}`)
         return
       }
 
@@ -163,7 +199,7 @@ export async function handleJarvisStreamChat(event: IpcMainEvent, messages: Stre
           durationMs: Math.round(performance.now() - roundStart),
           success: false,
           error: "Response body is not readable",
-          model: "kimi-k2-0711-preview",
+          model: modelConfig.modelID,
           inputChars,
           outputChars: 0,
           toolRounds,
@@ -206,7 +242,7 @@ export async function handleJarvisStreamChat(event: IpcMainEvent, messages: Stre
       void recordLLMCall({
         durationMs: Math.round(performance.now() - roundStart),
         success: true,
-        model: "kimi-k2-0711-preview",
+        model: modelConfig.modelID,
         inputChars,
         outputChars: assistantContent.length,
         inputTokens: lastUsage?.prompt_tokens,
@@ -269,7 +305,7 @@ export async function handleJarvisStreamChat(event: IpcMainEvent, messages: Stre
         durationMs: Math.round(performance.now() - roundStart),
         success: false,
         error: message,
-        model: "kimi-k2-0711-preview",
+        model: modelConfig.modelID,
         inputChars,
         outputChars: 0,
         toolRounds,

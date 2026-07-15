@@ -27,8 +27,15 @@ import {
 import { approveGrowthPromotion, getGrowthReport, scanJarvisGrowth, setGrowthSourceRoot } from "./jarvis-growth"
 import { getJarvisIntelligenceBriefing } from "./jarvis-intelligence"
 import { importJarvisMigration, previewJarvisMigration } from "./jarvis-migration"
+import { getModelDecisionHistory, setTaskModelOverride } from "./jarvis-model-router"
 import { getMetricsSnapshot } from "./jarvis-metrics"
-import type { JarvisModelConfigDraft, JarvisModelProfileDraft, JarvisModelRoutingConfigDraft } from "../preload/types"
+import type {
+  JarvisModelConfigDraft,
+  JarvisModelProfileDraft,
+  JarvisModelRole,
+  JarvisModelRoutingConfigDraft,
+  JarvisStreamChatOptions,
+} from "../preload/types"
 import type { MemoryDocument, MemorySearchOptions } from "@jarvis-os/memory"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 
@@ -260,8 +267,8 @@ export function registerIpcHandlers(deps: Deps) {
       relaunch: deps.relaunch,
     })
   })
-  ipcMain.on("jarvis:stream-chat", (event: IpcMainEvent, messages: StreamChatMessage[]) => {
-    void handleJarvisStreamChat(event, messages)
+  ipcMain.on("jarvis:stream-chat", (event: IpcMainEvent, messages: StreamChatMessage[], options?: JarvisStreamChatOptions) => {
+    void handleJarvisStreamChat(event, messages, options)
   })
 
   ipcMain.handle(
@@ -295,6 +302,15 @@ export function registerIpcHandlers(deps: Deps) {
     "jarvis:model-profile-connection-test",
     async (_event: IpcMainInvokeEvent, profile: JarvisModelProfileDraft) => {
       return testJarvisModelProfileConnection(profile)
+    },
+  )
+  ipcMain.handle("jarvis:model-decision-history", (_event: IpcMainInvokeEvent, taskId?: string) => {
+    return getModelDecisionHistory(taskId)
+  })
+  ipcMain.handle(
+    "jarvis:model-override-task",
+    (_event: IpcMainInvokeEvent, taskId: string, role: JarvisModelRole | null) => {
+      setTaskModelOverride(taskId, role)
     },
   )
 

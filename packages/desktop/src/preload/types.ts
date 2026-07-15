@@ -45,6 +45,11 @@ export type JarvisStreamChatMessage = {
   content: string
 }
 
+export type JarvisStreamChatOptions = {
+  taskId?: string
+  failureCount?: number
+}
+
 export type JarvisModelProviderType = "openai-compatible"
 export type JarvisModelRole = "daily" | "designer" | "worker" | "reviewer" | "fallback"
 
@@ -322,6 +327,7 @@ export type ElectronAPI = {
       onError: (error: string) => void
       onDone: () => void
     },
+    options?: JarvisStreamChatOptions,
   ) => () => void
 
   jarvisMemorySearch: (
@@ -335,6 +341,9 @@ export type ElectronAPI = {
   jarvisModelRoutingConfigGet: () => Promise<JarvisModelRoutingConfigSnapshot | null>
   jarvisModelRoutingConfigSave: (config: JarvisModelRoutingConfigDraft) => Promise<JarvisModelRoutingConfigSnapshot>
   jarvisModelProfileConnectionTest: (profile: JarvisModelProfileDraft) => Promise<JarvisModelConnectionResult>
+  jarvisModelDecisionHistory: (taskId?: string) => Promise<JarvisModelDecision[]>
+  jarvisModelOverrideTask: (taskId: string, role: JarvisModelRole | null) => Promise<void>
+  jarvisModelDecisionSubscribe: (cb: (decision: JarvisModelDecision) => void) => () => void
 
   jarvisMetricsSnapshot: () => Promise<JarvisMetricsSnapshot>
   jarvisMetricsSubscribe: (cb: (snapshot: JarvisMetricsSnapshot) => void) => () => void

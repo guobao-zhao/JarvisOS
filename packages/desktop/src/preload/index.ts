@@ -12,9 +12,12 @@ import type {
   JarvisModelConfigDraft,
   JarvisModelConfigSnapshot,
   JarvisModelConnectionResult,
+  JarvisModelDecision,
   JarvisModelProfileDraft,
+  JarvisModelRole,
   JarvisModelRoutingConfigDraft,
   JarvisModelRoutingConfigSnapshot,
+  JarvisStreamChatOptions,
   JarvisStreamChatMessage,
   JarvisToolMetric,
   WslServersEvent,
@@ -103,7 +106,7 @@ const api: ElectronAPI = {
     return () => ipcRenderer.removeListener("deep-link", handler)
   },
 
-  jarvisStreamChat: (messages: JarvisStreamChatMessage[], callbacks) => {
+  jarvisStreamChat: (messages: JarvisStreamChatMessage[], callbacks, options?: JarvisStreamChatOptions) => {
     const deltaHandler = (_: unknown, delta: string) => callbacks.onDelta(delta)
     const errorHandler = (_: unknown, error: string) => callbacks.onError(error)
     const doneHandler = () => callbacks.onDone()
@@ -112,7 +115,7 @@ const api: ElectronAPI = {
     ipcRenderer.on("jarvis:stream-chat:error", errorHandler)
     ipcRenderer.on("jarvis:stream-chat:done", doneHandler)
 
-    ipcRenderer.send("jarvis:stream-chat", messages)
+    ipcRenderer.send("jarvis:stream-chat", messages, options)
 
     return () => {
       ipcRenderer.removeListener("jarvis:stream-chat:delta", deltaHandler)
@@ -137,6 +140,17 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("jarvis:model-routing-config-save", config) as Promise<JarvisModelRoutingConfigSnapshot>,
   jarvisModelProfileConnectionTest: (profile: JarvisModelProfileDraft) =>
     ipcRenderer.invoke("jarvis:model-profile-connection-test", profile) as Promise<JarvisModelConnectionResult>,
+  jarvisModelDecisionHistory: (taskId?: string) =>
+    ipcRenderer.invoke("jarvis:model-decision-history", taskId) as Promise<JarvisModelDecision[]>,
+  jarvisModelOverrideTask: (taskId: string, role: JarvisModelRole | null) =>
+    ipcRenderer.invoke("jarvis:model-override-task", taskId, role) as Promise<void>,
+  jarvisModelDecisionSubscribe: (cb) => {
+    const handler = (_: unknown, decision: JarvisModelDecision) => cb(decision)
+    ipcRenderer.on("jarvis:model-decision", handler)
+    return () => {
+      ipcRenderer.removeListener("jarvis:model-decision", handler)
+    }
+  },
 
   jarvisMetricsSnapshot: () =>
     ipcRenderer.invoke("jarvis:metrics-snapshot") as Promise<JarvisMetricsSnapshot>,
