@@ -835,6 +835,7 @@
   height: 640px;
   border: 1px solid rgba(94, 246, 255, 0.14);
   box-shadow: inset 0 0 30px rgba(94, 246, 255, 0.04), 0 0 35px rgba(94, 246, 255, 0.05);
+  animation: jarvis-hub-orbit-spin 82s linear infinite;
 }
 
 .jarvis-hub-orbit--outer::before,
@@ -851,24 +852,26 @@
   width: 560px;
   height: 560px;
   border: 1px solid rgba(251, 191, 36, 0.16);
+  animation: jarvis-hub-orbit-spin-reverse 74s linear infinite;
 }
 
 .jarvis-hub-orbit--inner {
   width: 490px;
   height: 490px;
   border: 1px solid rgba(52, 211, 153, 0.16);
+  animation: jarvis-hub-orbit-spin 66s linear infinite;
 }
 
 .jarvis-hub-core--active .jarvis-hub-orbit--outer {
-  animation: jarvis-hub-orbit-spin 52s linear infinite;
+  animation-duration: 52s;
 }
 
 .jarvis-hub-core--active .jarvis-hub-orbit--middle {
-  animation: jarvis-hub-orbit-spin-reverse 44s linear infinite;
+  animation-duration: 44s;
 }
 
 .jarvis-hub-core--active .jarvis-hub-orbit--inner {
-  animation: jarvis-hub-orbit-spin 36s linear infinite;
+  animation-duration: 36s;
 }
 
 .jarvis-hub-core--scanning .jarvis-hub-orbit--inner {
