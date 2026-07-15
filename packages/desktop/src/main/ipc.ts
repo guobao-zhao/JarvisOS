@@ -13,10 +13,22 @@ import { getPinchZoomEnabled, getWindowID, setPinchZoomEnabled, setTitlebar, upd
 import type { UpdaterController } from "./updater-controller"
 import { getToolUsageMetrics, handleJarvisStreamChat, type StreamChatMessage } from "./jarvis-llm"
 import {
+  getJarvisModelConfigSnapshot,
+  getJarvisModelRoutingConfigSnapshot,
+  saveJarvisModelConfig,
+  saveJarvisModelRoutingConfig,
+  testJarvisModelConnection,
+  testJarvisModelProfileConnection,
+} from "./jarvis-model-config"
+import {
   handleJarvisMemorySearch,
   handleJarvisMemoryWrite,
 } from "./jarvis-memory"
+import { approveGrowthPromotion, getGrowthReport, scanJarvisGrowth, setGrowthSourceRoot } from "./jarvis-growth"
+import { getJarvisIntelligenceBriefing } from "./jarvis-intelligence"
+import { importJarvisMigration, previewJarvisMigration } from "./jarvis-migration"
 import { getMetricsSnapshot } from "./jarvis-metrics"
+import type { JarvisModelConfigDraft, JarvisModelProfileDraft, JarvisModelRoutingConfigDraft } from "../preload/types"
 import type { MemoryDocument, MemorySearchOptions } from "@jarvis-os/memory"
 import { createUpdaterSubscriptions } from "./updater-subscriptions"
 
@@ -261,10 +273,55 @@ export function registerIpcHandlers(deps: Deps) {
   ipcMain.handle("jarvis:memory-write", async (_event: IpcMainInvokeEvent, doc: MemoryDocument) => {
     return handleJarvisMemoryWrite(doc)
   })
+  ipcMain.handle("jarvis:model-config-get", async () => {
+    return getJarvisModelConfigSnapshot()
+  })
+  ipcMain.handle("jarvis:model-config-save", async (_event: IpcMainInvokeEvent, config: JarvisModelConfigDraft) => {
+    return saveJarvisModelConfig(config)
+  })
+  ipcMain.handle("jarvis:model-connection-test", async (_event: IpcMainInvokeEvent, config: JarvisModelConfigDraft) => {
+    return testJarvisModelConnection(config)
+  })
+  ipcMain.handle("jarvis:model-routing-config-get", async () => {
+    return getJarvisModelRoutingConfigSnapshot()
+  })
+  ipcMain.handle(
+    "jarvis:model-routing-config-save",
+    async (_event: IpcMainInvokeEvent, config: JarvisModelRoutingConfigDraft) => {
+      return saveJarvisModelRoutingConfig(config)
+    },
+  )
+  ipcMain.handle(
+    "jarvis:model-profile-connection-test",
+    async (_event: IpcMainInvokeEvent, profile: JarvisModelProfileDraft) => {
+      return testJarvisModelProfileConnection(profile)
+    },
+  )
 
   ipcMain.handle("jarvis:metrics-snapshot", () => {
     return getMetricsSnapshot()
   })
+
+  ipcMain.handle("jarvis:growth-report", () => {
+    return getGrowthReport()
+  })
+
+  ipcMain.handle("jarvis:growth-scan", async () => {
+    return await scanJarvisGrowth()
+  })
+
+  ipcMain.handle("jarvis:growth-set-source-root", (_event: IpcMainInvokeEvent, sourceRoot: string | null) =>
+    setGrowthSourceRoot(sourceRoot),
+  )
+
+  ipcMain.handle("jarvis:growth-approve-promotion", (_event: IpcMainInvokeEvent, assetId: string) =>
+    approveGrowthPromotion(assetId),
+  )
+
+  ipcMain.handle("jarvis:intelligence-briefing", () => getJarvisIntelligenceBriefing())
+
+  ipcMain.handle("jarvis:migration-preview", (_event: IpcMainInvokeEvent, root: string) => previewJarvisMigration(root))
+  ipcMain.handle("jarvis:migration-import", (_event: IpcMainInvokeEvent, root: string) => importJarvisMigration(root))
 
   ipcMain.handle("jarvis:tool-metrics", async () => {
     try {

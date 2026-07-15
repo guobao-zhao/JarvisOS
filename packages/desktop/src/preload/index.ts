@@ -1,5 +1,24 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
-import type { ElectronAPI, JarvisMemorySearchResponse, JarvisMemoryWriteResponse, JarvisMetricsSnapshot, JarvisStreamChatMessage, JarvisToolMetric, WslServersEvent } from "./types"
+import type {
+  ElectronAPI,
+  JarvisGrowthPromotionDecision,
+  JarvisGrowthReport,
+  JarvisIntelligenceBriefing,
+  JarvisMemorySearchResponse,
+  JarvisMemoryWriteResponse,
+  JarvisMetricsSnapshot,
+  JarvisMigrationImportResult,
+  JarvisMigrationPreview,
+  JarvisModelConfigDraft,
+  JarvisModelConfigSnapshot,
+  JarvisModelConnectionResult,
+  JarvisModelProfileDraft,
+  JarvisModelRoutingConfigDraft,
+  JarvisModelRoutingConfigSnapshot,
+  JarvisStreamChatMessage,
+  JarvisToolMetric,
+  WslServersEvent,
+} from "./types"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -107,6 +126,17 @@ const api: ElectronAPI = {
 
   jarvisMemoryWrite: (doc) =>
     ipcRenderer.invoke("jarvis:memory-write", doc) as Promise<JarvisMemoryWriteResponse>,
+  jarvisModelConfigGet: () => ipcRenderer.invoke("jarvis:model-config-get") as Promise<JarvisModelConfigSnapshot | null>,
+  jarvisModelConfigSave: (config: JarvisModelConfigDraft) =>
+    ipcRenderer.invoke("jarvis:model-config-save", config) as Promise<JarvisModelConfigSnapshot>,
+  jarvisModelConnectionTest: (config: JarvisModelConfigDraft) =>
+    ipcRenderer.invoke("jarvis:model-connection-test", config) as Promise<JarvisModelConnectionResult>,
+  jarvisModelRoutingConfigGet: () =>
+    ipcRenderer.invoke("jarvis:model-routing-config-get") as Promise<JarvisModelRoutingConfigSnapshot | null>,
+  jarvisModelRoutingConfigSave: (config: JarvisModelRoutingConfigDraft) =>
+    ipcRenderer.invoke("jarvis:model-routing-config-save", config) as Promise<JarvisModelRoutingConfigSnapshot>,
+  jarvisModelProfileConnectionTest: (profile: JarvisModelProfileDraft) =>
+    ipcRenderer.invoke("jarvis:model-profile-connection-test", profile) as Promise<JarvisModelConnectionResult>,
 
   jarvisMetricsSnapshot: () =>
     ipcRenderer.invoke("jarvis:metrics-snapshot") as Promise<JarvisMetricsSnapshot>,
@@ -120,6 +150,31 @@ const api: ElectronAPI = {
   },
 
   jarvisToolMetrics: () => ipcRenderer.invoke("jarvis:tool-metrics") as Promise<JarvisToolMetric[]>,
+
+  jarvisGrowthReport: () => ipcRenderer.invoke("jarvis:growth-report") as Promise<JarvisGrowthReport>,
+  jarvisGrowthScan: () => ipcRenderer.invoke("jarvis:growth-scan") as Promise<JarvisGrowthReport>,
+  jarvisGrowthSetSourceRoot: (sourceRoot) =>
+    ipcRenderer.invoke("jarvis:growth-set-source-root", sourceRoot) as Promise<JarvisGrowthReport>,
+  jarvisGrowthApprovePromotion: (assetId) =>
+    ipcRenderer.invoke("jarvis:growth-approve-promotion", assetId) as Promise<JarvisGrowthPromotionDecision>,
+  jarvisGrowthSubscribe: (cb) => {
+    const handler = (_: unknown, report: JarvisGrowthReport) => cb(report)
+    ipcRenderer.on("jarvis:growth-update", handler)
+    return () => {
+      ipcRenderer.removeListener("jarvis:growth-update", handler)
+    }
+  },
+  jarvisIntelligenceBriefing: () =>
+    ipcRenderer.invoke("jarvis:intelligence-briefing") as Promise<JarvisIntelligenceBriefing>,
+  jarvisIntelligenceSubscribe: (cb) => {
+    const handler = (_: unknown, briefing: JarvisIntelligenceBriefing) => cb(briefing)
+    ipcRenderer.on("jarvis:intelligence-update", handler)
+    return () => {
+      ipcRenderer.removeListener("jarvis:intelligence-update", handler)
+    }
+  },
+  jarvisMigrationPreview: (root) => ipcRenderer.invoke("jarvis:migration-preview", root) as Promise<JarvisMigrationPreview>,
+  jarvisMigrationImport: (root) => ipcRenderer.invoke("jarvis:migration-import", root) as Promise<JarvisMigrationImportResult>,
 
   openDirectoryPicker: (opts) => ipcRenderer.invoke("open-directory-picker", opts),
   openFilePicker: (opts) => ipcRenderer.invoke("open-file-picker", opts),

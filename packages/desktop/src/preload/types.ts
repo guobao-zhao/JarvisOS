@@ -45,12 +45,64 @@ export type JarvisStreamChatMessage = {
   content: string
 }
 
+export type JarvisModelProviderType = "openai-compatible"
+export type JarvisModelRole = "daily" | "designer" | "worker" | "reviewer" | "fallback"
+
+export type JarvisModelConfigDraft = {
+  providerType: JarvisModelProviderType
+  baseURL: string
+  apiKey?: string
+  modelID: string
+}
+
+export type JarvisModelConfigSnapshot = {
+  providerType: JarvisModelProviderType
+  baseURL: string
+  modelID: string
+  hasApiKey: boolean
+}
+
+export type JarvisModelProfileDraft = {
+  id: string
+  label: string
+  providerType: JarvisModelProviderType
+  baseURL: string
+  apiKey?: string
+  modelID: string
+}
+
+export type JarvisModelProfileSnapshot = {
+  id: string
+  label: string
+  providerType: JarvisModelProviderType
+  baseURL: string
+  modelID: string
+  hasApiKey: boolean
+}
+
+export type JarvisModelRoutingConfigDraft = {
+  version: 2
+  profiles: JarvisModelProfileDraft[]
+  roleBindings: Record<JarvisModelRole, string>
+}
+
+export type JarvisModelRoutingConfigSnapshot = {
+  version: 2
+  profiles: JarvisModelProfileSnapshot[]
+  roleBindings: Record<JarvisModelRole, string>
+}
+
+export type JarvisModelConnectionResult =
+  | { ok: true; status: number; latencyMs: number; modelID: string }
+  | { ok: false; status?: number; latencyMs: number; modelID: string; error: string }
+
 export type MemorySource =
   | "conversation"
   | "intelligence"
   | "user_manual"
   | "task"
   | "insight"
+  | "growth"
 
 export type MemoryDocument = {
   id: string
@@ -130,6 +182,90 @@ export type JarvisToolMetric = {
   lastUsedAt: number
 }
 
+export type JarvisGrowthReportTotals = {
+  discovered: number
+  classified: number
+  sandboxPassed: number
+  sandboxFailed: number
+  promotionReady: number
+  highRisk: number
+}
+
+export type JarvisGrowthSuggestion = {
+  assetId: string
+  title: string
+  recommended: boolean
+  reason: string
+  risk: string
+  action: string
+}
+
+export type JarvisGrowthProfile = {
+  focusAreas: string[]
+  safeCapabilityCount: number
+  highRiskCount: number
+  promotionReadyCount: number
+}
+
+export type JarvisGrowthReminder = {
+  id: string
+  level: "info" | "warning"
+  title: string
+  message: string
+}
+
+export type JarvisGrowthChallenge = {
+  id: string
+  title: string
+  question: string
+  evidence: string[]
+}
+
+export type JarvisGrowthReport = {
+  generatedAt: number
+  sourceRoot: string
+  totals: JarvisGrowthReportTotals
+  suggestions: JarvisGrowthSuggestion[]
+  risks: string[]
+  nextActions: string[]
+  profile?: JarvisGrowthProfile
+  reminders?: JarvisGrowthReminder[]
+  challenges?: JarvisGrowthChallenge[]
+}
+
+export type JarvisGrowthPromotionDecision = {
+  assetId: string
+  approved: boolean
+  decidedAt: number
+  promotedToolName?: string
+  reason: string
+}
+
+export type JarvisIntelligenceBriefing = {
+  generatedAt: number
+  sources: string[]
+  summary: string
+  items: { title: string; sourcePath: string; excerpt: string }[]
+}
+
+export type JarvisMigrationCandidate = {
+  sourcePath: string
+  title: string
+  source: MemorySource
+  tags: string[]
+}
+
+export type JarvisMigrationPreview = {
+  root: string
+  candidates: JarvisMigrationCandidate[]
+  skipped: string[]
+}
+
+export type JarvisMigrationImportResult = {
+  imported: number
+  skipped: number
+}
+
 export type ElectronAPI = {
   killSidecar: () => Promise<void>
   installCli: () => Promise<string>
@@ -170,11 +306,26 @@ export type ElectronAPI = {
     options?: { topK?: number; source?: MemorySource; includeContent?: boolean },
   ) => Promise<JarvisMemorySearchResponse>
   jarvisMemoryWrite: (doc: MemoryDocument) => Promise<JarvisMemoryWriteResponse>
+  jarvisModelConfigGet: () => Promise<JarvisModelConfigSnapshot | null>
+  jarvisModelConfigSave: (config: JarvisModelConfigDraft) => Promise<JarvisModelConfigSnapshot>
+  jarvisModelConnectionTest: (config: JarvisModelConfigDraft) => Promise<JarvisModelConnectionResult>
+  jarvisModelRoutingConfigGet: () => Promise<JarvisModelRoutingConfigSnapshot | null>
+  jarvisModelRoutingConfigSave: (config: JarvisModelRoutingConfigDraft) => Promise<JarvisModelRoutingConfigSnapshot>
+  jarvisModelProfileConnectionTest: (profile: JarvisModelProfileDraft) => Promise<JarvisModelConnectionResult>
 
   jarvisMetricsSnapshot: () => Promise<JarvisMetricsSnapshot>
   jarvisMetricsSubscribe: (cb: (snapshot: JarvisMetricsSnapshot) => void) => () => void
 
   jarvisToolMetrics: () => Promise<JarvisToolMetric[]>
+  jarvisGrowthReport: () => Promise<JarvisGrowthReport>
+  jarvisGrowthScan: () => Promise<JarvisGrowthReport>
+  jarvisGrowthSetSourceRoot: (sourceRoot: string | null) => Promise<JarvisGrowthReport>
+  jarvisGrowthApprovePromotion: (assetId: string) => Promise<JarvisGrowthPromotionDecision>
+  jarvisGrowthSubscribe: (cb: (report: JarvisGrowthReport) => void) => () => void
+  jarvisIntelligenceBriefing: () => Promise<JarvisIntelligenceBriefing>
+  jarvisIntelligenceSubscribe: (cb: (briefing: JarvisIntelligenceBriefing) => void) => () => void
+  jarvisMigrationPreview: (root: string) => Promise<JarvisMigrationPreview>
+  jarvisMigrationImport: (root: string) => Promise<JarvisMigrationImportResult>
 
   openDirectoryPicker: (opts?: {
     multiple?: boolean
