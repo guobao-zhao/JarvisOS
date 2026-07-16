@@ -6,6 +6,7 @@ const MEMORY_SOURCES: MemorySource[] = [
   "user_manual",
   "task",
   "insight",
+  "growth",
 ]
 
 export function isMemorySource(value: unknown): value is MemorySource {

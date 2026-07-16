@@ -38,7 +38,14 @@ export function MigrationPanel() {
           <div class="text-[10px] text-white/65">
             {value().candidates.length} candidates
             <For each={value().candidates.slice(0, 6)}>
-              {(item) => <div>{item.title} · {item.source}</div>}
+              {(item) => (
+                <div>
+                  {item.project ? `${item.project} / ` : ""}{item.title}
+                  {" · "}{item.kind}
+                  {item.domain ? ` · ${item.domain}` : ""}
+                  {" · "}{item.verification}
+                </div>
+              )}
             </For>
           </div>
         )}

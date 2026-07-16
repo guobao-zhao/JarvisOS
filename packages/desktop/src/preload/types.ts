@@ -278,9 +278,17 @@ export type JarvisIntelligenceBriefing = {
 
 export type JarvisMigrationCandidate = {
   sourcePath: string
+  relativePath: string
   title: string
   source: MemorySource
   tags: string[]
+  kind: "knowledge" | "skill" | "mcp" | "governance" | "identity" | "routing"
+  project?: string
+  domain?: string
+  topic?: string
+  verification: "verified" | "unverified" | "needs_review"
+  risk: "low" | "medium" | "high"
+  action: string
 }
 
 export type JarvisMigrationPreview = {
