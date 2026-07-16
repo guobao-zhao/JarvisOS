@@ -15,6 +15,7 @@ import type {
 import { jarvisStore } from "./Store"
 import { MemoryOrb } from "./MemoryOrb"
 import { VoiceOrb } from "./VoiceOrb"
+import { MigrationPanel } from "./MigrationPanel"
 
 type Accent = "cyan" | "amber" | "violet" | "emerald"
 
@@ -194,6 +195,7 @@ export function HolographicHub() {
     detail: "正在读取模型配置",
   })
   const [modelDialogOpen, setModelDialogOpen] = createSignal(false)
+  const [migrationDialogOpen, setMigrationDialogOpen] = createSignal(false)
   const [profileTesting, setProfileTesting] = createSignal<string | null>(null)
   const [profileTestResult, setProfileTestResult] = createSignal<Record<string, { state: ProfileTestState; text: string }>>({})
   const [modelSaving, setModelSaving] = createSignal(false)
@@ -529,6 +531,13 @@ export function HolographicHub() {
           >
             {isScanning() ? "Scanning" : "Scan Growth"}
           </button>
+          <button
+            type="button"
+            class="pointer-events-auto mt-2 w-full rounded border border-cyan-300/30 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100 transition hover:border-cyan-200/70"
+            onClick={() => setMigrationDialogOpen(true)}
+          >
+            Open Migration
+          </button>
         </PulseCard>
       </div>
 
@@ -687,6 +696,27 @@ export function HolographicHub() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </Show>
+
+      <Show when={migrationDialogOpen()}>
+        <div class="pointer-events-auto fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 py-6 backdrop-blur-sm" onClick={() => setMigrationDialogOpen(false)}>
+          <div class="max-h-[86vh] w-full max-w-[720px] overflow-y-auto rounded-[18px] border border-white/10 bg-[#070c0e]/95 p-5 text-white shadow-[0_0_60px_rgba(0,0,0,0.45)]" onClick={(event) => event.stopPropagation()}>
+            <div class="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">Migration Control</div>
+                <div class="mt-1 text-lg font-semibold text-white">旧 Jarvis 迁移试点</div>
+              </div>
+              <button
+                type="button"
+                class="rounded border border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/60 transition hover:border-white/25"
+                onClick={() => setMigrationDialogOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <MigrationPanel />
           </div>
         </div>
       </Show>
