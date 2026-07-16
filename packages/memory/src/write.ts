@@ -2,7 +2,7 @@ import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import type { LLMWikiClient } from "./client"
 import { formatMemoryDocument, frontmatterToDocument } from "./markdown"
-import type { MemoryDocument } from "./types"
+import type { MemoryDocument, MemoryHit, MemorySearchOptions } from "./types"
 
 export interface WriteResult {
   ok: boolean
@@ -84,4 +84,96 @@ export async function readMemoryDoc(
   }
 
   return null
+}
+
+async function collectMarkdownFiles(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
+  const files: string[] = []
+  for (const entry of entries) {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...await collectMarkdownFiles(path))
+    } else if (entry.isFile() && entry.name.endsWith(".md")) {
+      files.push(path)
+    }
+  }
+  return files
+}
+
+function tokenize(value: string): string[] {
+  return value
+    .toLowerCase()
+    .split(/[^a-z0-9\u4e00-\u9fff:_-]+/u)
+    .map((part) => part.trim())
+    .filter((part) => part.length >= 2)
+}
+
+function scoreDocument(doc: MemoryDocument, queryTokens: string[]): number {
+  const title = doc.title.toLowerCase()
+  const titleLeaf = title.split("/").at(-1)?.trim() ?? title
+  const tags = doc.tags.join(" ").toLowerCase()
+  const content = doc.content.toLowerCase()
+  let score = 0
+
+  for (const token of queryTokens) {
+    if (titleLeaf === token) score += 10
+    if (title.includes(token)) score += 6
+    if (tags.includes(token)) score += 4
+    if (content.includes(token)) score += 1
+  }
+
+  if (queryTokens.length > 0 && queryTokens.every((token) => `${title} ${tags} ${content}`.includes(token))) {
+    score += 5
+  }
+
+  return score
+}
+
+export async function searchMemoryDocs(
+  query: string,
+  outboxDir: string,
+  options?: MemorySearchOptions,
+): Promise<MemoryHit[]> {
+  if (!outboxDir) return []
+
+  const queryTokens = tokenize(query)
+  if (queryTokens.length === 0) return []
+
+  const files = await collectMarkdownFiles(outboxDir)
+  const hits: Array<MemoryHit & { rawScore: number }> = []
+
+  for (const file of files) {
+    const raw = await readFile(file, "utf-8").catch(() => null)
+    if (!raw) continue
+
+    let doc: MemoryDocument
+    try {
+      doc = frontmatterToDocument(file, raw)
+    } catch {
+      continue
+    }
+
+    if (options?.source && doc.source !== options.source) continue
+
+    const rawScore = scoreDocument(doc, queryTokens)
+    if (rawScore <= 0) continue
+
+    hits.push({
+      id: doc.id,
+      title: doc.title,
+      content: options?.includeContent === false ? "" : doc.content,
+      score: rawScore / Math.max(1, queryTokens.length * 10),
+      source: doc.source,
+      path: file,
+      rawScore,
+    })
+  }
+
+  return hits
+    .sort((a, b) => {
+      if (b.rawScore !== a.rawScore) return b.rawScore - a.rawScore
+      return a.title.length - b.title.length
+    })
+    .slice(0, options?.topK ?? 5)
+    .map(({ rawScore: _rawScore, ...hit }) => hit)
 }

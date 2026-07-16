@@ -1,6 +1,6 @@
 import { LLMWikiClient } from "./client"
 import { loadMemoryConfig } from "./config"
-import { readMemoryDoc, writeMemoryDoc } from "./write"
+import { readMemoryDoc, searchMemoryDocs, writeMemoryDoc } from "./write"
 import type { MemoryDocument, MemoryHealth, MemoryHit, MemorySearchOptions, MemoryService } from "./types"
 
 export function createMemoryService(): MemoryService {
@@ -15,8 +15,14 @@ export function createMemoryService(): MemoryService {
         writable: base.writable && Boolean(config.outboxDir),
       }
     },
-    search(query, options) {
-      return client.search(query, options)
+    async search(query, options) {
+      try {
+        const hits = await client.search(query, options)
+        if (hits.length > 0) return hits
+      } catch {
+        // Fall back to local outbox search when LLM-wiki is unavailable or not yet indexed.
+      }
+      return searchMemoryDocs(query, config.outboxDir, options)
     },
     async read(id) {
       return (await client.read(id)) ?? (await readMemoryDoc(id, config.outboxDir))

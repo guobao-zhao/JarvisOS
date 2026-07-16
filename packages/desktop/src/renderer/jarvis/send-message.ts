@@ -8,14 +8,14 @@ import { generateTaskTitle } from "./task-title"
 
 async function runAssistantTurn(taskId: string) {
   const memoryContext = jarvisStore.recalledMemories
-    .map((h) => `【记忆】${h.title}\n${h.content}`)
+    .map((h) => `【记忆】${h.title}\n来源路径：${h.path ?? h.id}\n类型：${h.source}\n\n${h.content}`)
     .join("\n\n")
 
   const identityPrompt =
     "你是 Jarvis，宝哥的私人智能管家。你常驻在 JarvisOS 桌面应用中，通过语音和文字与宝哥交互。"
 
   const systemContent = memoryContext
-    ? `${identityPrompt}\n\n以下是与当前问题相关的历史记忆：\n\n${memoryContext}`
+    ? `${identityPrompt}\n\n以下是与当前问题相关的召回记忆。回答时优先依据这些记忆；如果记忆里包含来源路径、项目、领域、验证状态，必须在答案里说明。不要说“记忆库没有直接验证”，除非召回记忆确实没有相关内容。\n\n${memoryContext}`
     : identityPrompt
 
   const messages = [
