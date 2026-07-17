@@ -73,9 +73,10 @@ async function initMemoryService(): Promise<MemoryService> {
   return createMemoryService()
 }
 
-const memoryPromise = initMemoryService()
+let memoryPromise: Promise<MemoryService> | null = null
 
 async function getMemory(): Promise<MemoryService> {
+  memoryPromise ??= initMemoryService()
   return memoryPromise
 }
 

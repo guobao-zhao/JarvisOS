@@ -25,6 +25,10 @@ import {
   handleJarvisMemorySearch,
   handleJarvisMemoryWrite,
 } from "./jarvis-memory"
+import {
+  getJarvisMemorySupervisorStatus,
+  startJarvisMemorySupervisor,
+} from "./jarvis-memory-supervisor"
 import { approveGrowthPromotion, getGrowthReport, scanJarvisGrowth, setGrowthSourceRoot } from "./jarvis-growth"
 import { getJarvisIntelligenceBriefing } from "./jarvis-intelligence"
 import { importJarvisMigration, previewJarvisMigration } from "./jarvis-migration"
@@ -283,6 +287,15 @@ export function registerIpcHandlers(deps: Deps) {
   })
   ipcMain.handle("jarvis:memory-diagnostics", async (_event: IpcMainInvokeEvent, query: string) => {
     return handleJarvisMemoryDiagnostics(query)
+  })
+  ipcMain.handle("jarvis:memory-supervisor-status", () => {
+    return getJarvisMemorySupervisorStatus()
+  })
+  ipcMain.handle("jarvis:memory-supervisor-start", () => {
+    return startJarvisMemorySupervisor()
+  })
+  ipcMain.handle("jarvis:memory-supervisor-subscribe", (event: IpcMainInvokeEvent) => {
+    event.sender.send("jarvis:memory-supervisor-update", getJarvisMemorySupervisorStatus())
   })
   ipcMain.handle("jarvis:model-config-get", async () => {
     return getJarvisModelConfigSnapshot()

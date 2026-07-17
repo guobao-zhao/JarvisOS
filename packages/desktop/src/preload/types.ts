@@ -183,6 +183,33 @@ export type JarvisMemoryDiagnostics = {
   error?: string
 }
 
+export type JarvisMemorySupervisorPhase =
+  | "booting"
+  | "checking"
+  | "launching"
+  | "ready"
+  | "degraded"
+
+export type JarvisMemorySupervisorEvent = {
+  id: string
+  at: number
+  level: "info" | "success" | "warning" | "error"
+  message: string
+  detail?: string
+}
+
+export type JarvisMemorySupervisorStatus = {
+  phase: JarvisMemorySupervisorPhase
+  healthy: boolean
+  baseURL: string
+  outboxDir: string
+  project: string
+  llmWikiAppPath: string
+  startedByJarvisOS: boolean
+  lastCheckedAt: number
+  events: JarvisMemorySupervisorEvent[]
+}
+
 export type JarvisSystemMetricsSnapshot = {
   timestamp: number
   cpu: { percent: number; cores: number }
@@ -367,6 +394,9 @@ export type ElectronAPI = {
   ) => Promise<JarvisMemorySearchResponse>
   jarvisMemoryWrite: (doc: MemoryDocument) => Promise<JarvisMemoryWriteResponse>
   jarvisMemoryDiagnostics: (query: string) => Promise<JarvisMemoryDiagnostics>
+  jarvisMemorySupervisorStatus: () => Promise<JarvisMemorySupervisorStatus>
+  jarvisMemorySupervisorStart: () => Promise<JarvisMemorySupervisorStatus>
+  jarvisMemorySupervisorSubscribe: (cb: (status: JarvisMemorySupervisorStatus) => void) => () => void
   jarvisModelConfigGet: () => Promise<JarvisModelConfigSnapshot | null>
   jarvisModelConfigSave: (config: JarvisModelConfigDraft) => Promise<JarvisModelConfigSnapshot>
   jarvisModelConnectionTest: (config: JarvisModelConfigDraft) => Promise<JarvisModelConnectionResult>

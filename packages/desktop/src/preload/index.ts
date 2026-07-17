@@ -5,6 +5,7 @@ import type {
   JarvisGrowthReport,
   JarvisIntelligenceBriefing,
   JarvisMemorySearchResponse,
+  JarvisMemorySupervisorStatus,
   JarvisMemoryWriteResponse,
   JarvisMemoryDiagnostics,
   JarvisMetricsSnapshot,
@@ -132,6 +133,18 @@ const api: ElectronAPI = {
     ipcRenderer.invoke("jarvis:memory-write", doc) as Promise<JarvisMemoryWriteResponse>,
   jarvisMemoryDiagnostics: (query) =>
     ipcRenderer.invoke("jarvis:memory-diagnostics", query) as Promise<JarvisMemoryDiagnostics>,
+  jarvisMemorySupervisorStatus: () =>
+    ipcRenderer.invoke("jarvis:memory-supervisor-status") as Promise<JarvisMemorySupervisorStatus>,
+  jarvisMemorySupervisorStart: () =>
+    ipcRenderer.invoke("jarvis:memory-supervisor-start") as Promise<JarvisMemorySupervisorStatus>,
+  jarvisMemorySupervisorSubscribe: (cb) => {
+    const handler = (_: unknown, status: JarvisMemorySupervisorStatus) => cb(status)
+    ipcRenderer.on("jarvis:memory-supervisor-update", handler)
+    void ipcRenderer.invoke("jarvis:memory-supervisor-subscribe")
+    return () => {
+      ipcRenderer.removeListener("jarvis:memory-supervisor-update", handler)
+    }
+  },
   jarvisModelConfigGet: () => ipcRenderer.invoke("jarvis:model-config-get") as Promise<JarvisModelConfigSnapshot | null>,
   jarvisModelConfigSave: (config: JarvisModelConfigDraft) =>
     ipcRenderer.invoke("jarvis:model-config-save", config) as Promise<JarvisModelConfigSnapshot>,

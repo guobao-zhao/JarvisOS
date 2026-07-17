@@ -4,6 +4,7 @@ import type { JSX } from "solid-js"
 import type {
   JarvisGrowthReport,
   JarvisMetricsSnapshot,
+  JarvisMemorySupervisorStatus,
   JarvisModelConnectionResult,
   JarvisModelDecision,
   JarvisModelProfileDraft,
@@ -168,12 +169,13 @@ function PulseCard(props: {
 }
 
 function MicroBar(props: { value: number; color: string; label: string }) {
-  const percent = () => `${Math.min(100, Math.max(0, props.value))}%`
+  const clamped = () => Math.min(100, Math.max(0, props.value))
+  const percent = () => `${clamped()}%`
   return (
     <div class="space-y-1">
       <div class="flex justify-between text-[9px] uppercase tracking-[0.14em] text-white/35">
         <span>{props.label}</span>
-        <span>{Math.round(props.value)}%</span>
+        <span>{Math.round(clamped())}%</span>
       </div>
       <div class="h-1 overflow-hidden rounded-full bg-white/5">
         <div class="h-full rounded-full transition-all duration-700" style={{ width: percent(), "background-color": props.color, "box-shadow": `0 0 10px ${props.color}` }} />
@@ -194,6 +196,7 @@ export function HolographicHub() {
     text: "检测中",
     detail: "正在读取模型配置",
   })
+  const [memorySupervisor, setMemorySupervisor] = createSignal<JarvisMemorySupervisorStatus | null>(null)
   const [modelDialogOpen, setModelDialogOpen] = createSignal(false)
   const [migrationDialogOpen, setMigrationDialogOpen] = createSignal(false)
   const [profileTesting, setProfileTesting] = createSignal<string | null>(null)
@@ -236,6 +239,9 @@ export function HolographicHub() {
       if (mounted) setGrowthError(String(reason))
     })
     void fetchTools()
+    void window.api.jarvisMemorySupervisorStatus().then((snapshot) => {
+      if (mounted) setMemorySupervisor(snapshot)
+    }).catch(() => undefined)
 
     const loadRouting = async () => {
       try {
@@ -270,6 +276,9 @@ export function HolographicHub() {
 
     const unsubscribe = window.api.jarvisMetricsSubscribe((snapshot) => setMetrics(snapshot))
     const unsubscribeDecision = window.api.jarvisModelDecisionSubscribe((decision) => setLatestDecision(decision))
+    const unsubscribeMemorySupervisor = window.api.jarvisMemorySupervisorSubscribe((snapshot) => {
+      setMemorySupervisor(snapshot)
+    })
     const timer = setInterval(fetchTools, 2500)
 
     onCleanup(() => {
@@ -277,6 +286,7 @@ export function HolographicHub() {
       clearInterval(timer)
       unsubscribe()
       unsubscribeDecision()
+      unsubscribeMemorySupervisor()
     })
   })
 
@@ -407,6 +417,29 @@ export function HolographicHub() {
   }
   const modelAccent = () => modelConnectionTone(modelStatus().state)
   const memoryMetrics = () => metrics()?.memory
+  const memorySupervisorState = () => memorySupervisor()
+  const memoryPulseLabel = () => {
+    const state = memorySupervisorState()
+    if (!state) return "recall"
+    if (state.phase === "ready") return "llm-wiki"
+    if (state.phase === "launching") return "starting"
+    if (state.phase === "degraded") return "local-store"
+    return "checking"
+  }
+  const memoryPulseValue = () => {
+    const state = memorySupervisorState()
+    if (!state) return `${Math.round(hitRate())}%`
+    if (state.phase === "ready") return "ONLINE"
+    if (state.phase === "degraded") return "DEGRADED"
+    if (state.phase === "launching") return "BOOTING"
+    return "CHECK"
+  }
+  const memoryPulseDetail = () => {
+    const state = memorySupervisorState()
+    if (!state) return `${hits()} hits · ${recalls()} recalls`
+    const path = state.outboxDir ? state.outboxDir.replace(/^.*\/JarvisOS\//, "JarvisOS/") : "canonical store pending"
+    return `${path} · ${hits()} hits · ${recalls()} recalls`
+  }
   const hitRate = () => memoryMetrics()?.hitRate ?? 0
   const recalls = () => memoryMetrics()?.totalRecalls ?? 0
   const hits = () => memoryMetrics()?.totalHits ?? 0
@@ -424,7 +457,7 @@ export function HolographicHub() {
     if (jarvisStore.isRecallingMemories) return "recalling"
     return jarvisStore.status
   }
-  const coreActive = () => hubMode() !== "idle"
+  const coreActive = () => true
 
   return (
     <div class="pointer-events-none fixed inset-0 z-20 overflow-hidden">
@@ -507,7 +540,7 @@ export function HolographicHub() {
       </div>
 
       <div class="jarvis-hub-node jarvis-hub-node--left-mid">
-        <PulseCard title="Memory Pulse" label="recall" value={`${Math.round(hitRate())}%`} sub={`${hits()} hits · ${recalls()} recalls`} accent="amber">
+        <PulseCard title="Memory Pulse" label={memoryPulseLabel()} value={memoryPulseValue()} sub={memoryPulseDetail()} accent="amber">
           <MicroBar label="recall signal" value={hitRate()} color="#fbbf24" />
         </PulseCard>
       </div>

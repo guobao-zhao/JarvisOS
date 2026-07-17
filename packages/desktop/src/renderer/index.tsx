@@ -18,10 +18,10 @@ import { createEffect, createMemo, createResource, createSignal, onCleanup, onMo
 import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { initI18n, t } from "./i18n"
+import { JarvisBootSequence } from "./jarvis/BootSequence"
 import { JarvisOSHUD } from "./jarvis/HUD"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import "./styles.css"
-import { Splash } from "@opencode-ai/ui/logo"
 import { useTheme } from "@opencode-ai/ui/theme/context"
 
 const root = document.getElementById("root")
@@ -279,11 +279,7 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
 listenForDeepLinks()
 
 function LoadingSplash() {
-  return (
-    <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base">
-      <Splash class="w-16 h-20 opacity-50 animate-pulse" />
-    </div>
-  )
+  return <JarvisBootSequence mode="full" />
 }
 
 function DesktopRoot(props: { windowState: DesktopWindowState }) {

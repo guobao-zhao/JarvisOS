@@ -17,6 +17,7 @@ import { CHANNEL } from "./constants"
 import { registerIpcHandlers, sendDeepLinks, sendMenuCommand } from "./ipc"
 import { initJarvisIntelligence } from "./jarvis-intelligence"
 import { initJarvisGrowth } from "./jarvis-growth"
+import { startJarvisMemorySupervisor } from "./jarvis-memory-supervisor"
 import { initJarvisMetrics, stopJarvisMetrics } from "./jarvis-metrics"
 import { forwardInitializationFailure } from "./initialization"
 import { exportDebugLogs, initCrashReporter, initLogging, startNetLog, write as writeLog } from "./logging"
@@ -268,6 +269,9 @@ const main = Effect.gen(function* () {
 
   initJarvisGrowth()
   initJarvisIntelligence()
+  void startJarvisMemorySupervisor().catch((error) => {
+    logger.warn("failed to initialize Jarvis memory supervisor", error)
+  })
 
   yield* Effect.promise(() =>
     initJarvisMetrics({
