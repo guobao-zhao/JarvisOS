@@ -6,6 +6,7 @@ import type {
   JarvisIntelligenceBriefing,
   JarvisMemorySearchResponse,
   JarvisMemoryWriteResponse,
+  JarvisMemoryDiagnostics,
   JarvisMetricsSnapshot,
   JarvisMigrationImportResult,
   JarvisMigrationPreview,
@@ -129,6 +130,8 @@ const api: ElectronAPI = {
 
   jarvisMemoryWrite: (doc) =>
     ipcRenderer.invoke("jarvis:memory-write", doc) as Promise<JarvisMemoryWriteResponse>,
+  jarvisMemoryDiagnostics: (query) =>
+    ipcRenderer.invoke("jarvis:memory-diagnostics", query) as Promise<JarvisMemoryDiagnostics>,
   jarvisModelConfigGet: () => ipcRenderer.invoke("jarvis:model-config-get") as Promise<JarvisModelConfigSnapshot | null>,
   jarvisModelConfigSave: (config: JarvisModelConfigDraft) =>
     ipcRenderer.invoke("jarvis:model-config-save", config) as Promise<JarvisModelConfigSnapshot>,

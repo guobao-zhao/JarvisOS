@@ -1,10 +1,14 @@
 import { spawnSync } from "node:child_process"
+import { readdir } from "node:fs/promises"
 import { homedir } from "node:os"
 import { join } from "node:path"
 
 import {
   createMemoryService,
+  loadMemoryConfig,
+  searchMemoryDocs,
   type MemoryDocument,
+  type MemoryHit,
   type MemorySearchOptions,
   type MemoryService,
 } from "@jarvis-os/memory"
@@ -108,6 +112,81 @@ export async function handleJarvisMemoryWrite(doc: MemoryDocument) {
   } catch (err) {
     return {
       ok: false,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
+
+async function countMarkdownFiles(dir: string): Promise<number> {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
+  let total = 0
+  for (const entry of entries) {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      total += await countMarkdownFiles(path)
+    } else if (entry.isFile() && entry.name.endsWith(".md")) {
+      total += 1
+    }
+  }
+  return total
+}
+
+function summarizeHits(hits: MemoryHit[]): MemoryHit[] {
+  return hits.map((hit) => ({
+    ...hit,
+    content: hit.content.slice(0, 1000),
+  }))
+}
+
+export async function handleJarvisMemoryDiagnostics(query: string) {
+  try {
+    await prepareJarvisMemoryEnv()
+    const config = loadMemoryConfig()
+    const memory = await getMemory()
+    const health = await memory.health()
+    const localDocCount = await countMarkdownFiles(config.outboxDir)
+    const localHits = await searchMemoryDocs(query, config.outboxDir, {
+      topK: 5,
+      includeContent: true,
+    })
+    const effectiveHits = await memory.search(query, {
+      topK: 5,
+      includeContent: true,
+    }).catch(() => [])
+
+    return {
+      ok: true,
+      health,
+      config: {
+        baseURL: config.baseURL,
+        project: config.project,
+        outboxDir: config.outboxDir,
+        tokenConfigured: Boolean(config.token),
+      },
+      localDocCount,
+      localHits: summarizeHits(localHits),
+      effectiveHits: summarizeHits(effectiveHits),
+    }
+  } catch (err) {
+    const config = loadMemoryConfig()
+    return {
+      ok: false,
+      health: {
+        ok: false,
+        authConfigured: false,
+        projectResolved: false,
+        writable: false,
+        reason: err instanceof Error ? err.message : String(err),
+      },
+      config: {
+        baseURL: config.baseURL,
+        project: config.project,
+        outboxDir: config.outboxDir,
+        tokenConfigured: Boolean(config.token),
+      },
+      localDocCount: 0,
+      localHits: [],
+      effectiveHits: [],
       error: err instanceof Error ? err.message : String(err),
     }
   }

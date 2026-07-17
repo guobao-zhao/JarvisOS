@@ -21,6 +21,7 @@ import {
   testJarvisModelProfileConnection,
 } from "./jarvis-model-config"
 import {
+  handleJarvisMemoryDiagnostics,
   handleJarvisMemorySearch,
   handleJarvisMemoryWrite,
 } from "./jarvis-memory"
@@ -279,6 +280,9 @@ export function registerIpcHandlers(deps: Deps) {
   )
   ipcMain.handle("jarvis:memory-write", async (_event: IpcMainInvokeEvent, doc: MemoryDocument) => {
     return handleJarvisMemoryWrite(doc)
+  })
+  ipcMain.handle("jarvis:memory-diagnostics", async (_event: IpcMainInvokeEvent, query: string) => {
+    return handleJarvisMemoryDiagnostics(query)
   })
   ipcMain.handle("jarvis:model-config-get", async () => {
     return getJarvisModelConfigSnapshot()

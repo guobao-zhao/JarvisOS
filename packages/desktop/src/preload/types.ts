@@ -152,6 +152,14 @@ export type MemoryHit = {
   path?: string
 }
 
+export type MemoryHealth = {
+  ok: boolean
+  authConfigured: boolean
+  projectResolved: boolean
+  writable: boolean
+  reason?: string
+}
+
 export type JarvisMemorySearchResponse =
   | { ok: true; hits: MemoryHit[] }
   | { ok: false; error: string }
@@ -159,6 +167,21 @@ export type JarvisMemorySearchResponse =
 export type JarvisMemoryWriteResponse =
   | { ok: true }
   | { ok: false; error: string }
+
+export type JarvisMemoryDiagnostics = {
+  ok: boolean
+  health: MemoryHealth
+  config: {
+    baseURL: string
+    project: string
+    outboxDir: string
+    tokenConfigured: boolean
+  }
+  localDocCount: number
+  localHits: MemoryHit[]
+  effectiveHits: MemoryHit[]
+  error?: string
+}
 
 export type JarvisSystemMetricsSnapshot = {
   timestamp: number
@@ -343,6 +366,7 @@ export type ElectronAPI = {
     options?: { topK?: number; source?: MemorySource; includeContent?: boolean },
   ) => Promise<JarvisMemorySearchResponse>
   jarvisMemoryWrite: (doc: MemoryDocument) => Promise<JarvisMemoryWriteResponse>
+  jarvisMemoryDiagnostics: (query: string) => Promise<JarvisMemoryDiagnostics>
   jarvisModelConfigGet: () => Promise<JarvisModelConfigSnapshot | null>
   jarvisModelConfigSave: (config: JarvisModelConfigDraft) => Promise<JarvisModelConfigSnapshot>
   jarvisModelConnectionTest: (config: JarvisModelConfigDraft) => Promise<JarvisModelConnectionResult>

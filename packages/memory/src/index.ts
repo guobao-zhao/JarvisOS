@@ -1,2 +1,5 @@
 export * from "./types"
 export { createMemoryService } from "./service"
+export { loadMemoryConfig } from "./config"
+export { LLMWikiClient } from "./client"
+export { searchMemoryDocs } from "./write"
